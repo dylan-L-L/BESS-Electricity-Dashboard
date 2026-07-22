@@ -1,0 +1,79 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+import { describe, expect, it } from "vitest";
+
+import {
+  CHINA_MARKET_TOPICS,
+  type ChinaMarketTopicId,
+} from "@/components/public/china-market-data";
+
+const EXPECTED_TOPIC_IDS = [
+  "trading-rules",
+  "storage-capacity-compensation",
+  "ancillary-services",
+  "fourth-regulatory-cycle-grid-cost",
+  "storage-operating-costs",
+  "green-power-direct-connection",
+  "retail-rules",
+];
+
+describe("China provincial market atlas taxonomy", () => {
+  it("defines seven distinct topics and 217 province-topic cells", () => {
+    expect(CHINA_MARKET_TOPICS.map((topic) => topic.id)).toEqual(
+      EXPECTED_TOPIC_IDS,
+    );
+    expect(new Set(CHINA_MARKET_TOPICS.map((topic) => topic.id)).size).toBe(7);
+    expect(31 * CHINA_MARKET_TOPICS.length).toBe(217);
+  });
+
+  it("keeps requested subfields and separates revenue from grid cost", () => {
+    const topicsById = new Map(
+      CHINA_MARKET_TOPICS.map((topic) => [topic.id, topic]),
+    );
+    const fieldLabels = (topicId: ChinaMarketTopicId) =>
+      topicsById.get(topicId)?.fields.map((field) => field.label) ?? [];
+
+    expect(fieldLabels("trading-rules")).toEqual(
+      expect.arrayContaining([
+        "现货日前规则",
+        "现货实时规则",
+        "辅助服务交易规则",
+        "零售市场规则",
+      ]),
+    );
+    expect(fieldLabels("storage-capacity-compensation")).toEqual(
+      expect.arrayContaining([
+        "补偿金额",
+        "考核机制",
+        "补贴时长",
+        "等效折算系数",
+      ]),
+    );
+    expect(fieldLabels("fourth-regulatory-cycle-grid-cost")).toEqual(
+      expect.arrayContaining(["输配电容量电价", "输配电需量电价", "线损率"]),
+    );
+    expect(topicsById.get("storage-capacity-compensation")?.title).toContain(
+      "收益",
+    );
+    expect(
+      topicsById.get("fourth-regulatory-cycle-grid-cost")?.title,
+    ).toContain("用网成本");
+  });
+
+  it("uses regions as the only province registry", () => {
+    const dataSource = readFileSync(
+      fileURLToPath(
+        new URL(
+          "../../src/components/public/china-market-data.ts",
+          import.meta.url,
+        ),
+      ),
+      "utf8",
+    );
+
+    expect(dataSource).not.toContain("CHINA_PROVINCES");
+    expect(dataSource).not.toContain("tibet");
+    expect(dataSource).not.toContain("xizang");
+  });
+});

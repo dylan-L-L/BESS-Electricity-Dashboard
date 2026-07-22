@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Test and TypeScript output
+coverage/
+*.tsbuildinfo
+
+# Local environment files and secrets
+.env*
+!.env.example
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Local deployment metadata
+.vercel/
+
+# Supabase CLI/Studio local state
+supabase/.temp/
+supabase/.branches/
+supabase/snippets/

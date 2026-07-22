@@ -1,0 +1,50 @@
+{
+  "name": "grid-ledger-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run tests/e2e",
+    "test:e2e:http": "node scripts/http-e2e.mjs",
+    "test:e2e:imports": "node scripts/import-http-e2e.mjs",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.99.0",
+    "cheerio": "^1.1.2",
+    "exceljs": "^4.4.0",
+    "ipaddr.js": "^2.4.0",
+    "next": "^16.2.0",
+    "openai": "^6.48.0",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1",
+    "undici": "^6.27.0",
+    "yauzl": "^3.4.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/yauzl": "^3.4.0",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "^16.2.0",
+    "supabase": "^2.72.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20.18.1"
+  }
+}

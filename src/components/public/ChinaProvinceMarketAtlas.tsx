@@ -1,0 +1,451 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+import type { MarketMetric, Region, Signal } from "@/lib/types";
+
+import {
+  CHINA_MARKET_TOPICS,
+  type ChinaMarketTopicId,
+} from "./china-market-data";
+import styles from "./ChinaProvinceMarketAtlas.module.css";
+
+type TopicDefinition = (typeof CHINA_MARKET_TOPICS)[number];
+
+function classNames(...values: Array<string | false | null | undefined>): string {
+  return values.filter(Boolean).join(" ");
+}
+
+function regionLabel(region: Region): string {
+  return region.name_zh || region.name_en || region.code || region.slug;
+}
+
+function regionMonogram(region: Region): string {
+  return regionLabel(region).slice(0, 1);
+}
+
+function findChinaRegion(
+  regions: readonly Region[],
+  chinaRegionId?: string,
+): Region | undefined {
+  if (chinaRegionId) return regions.find((region) => region.id === chinaRegionId);
+  return regions.find(
+    (region) =>
+      region.region_type === "country" &&
+      (region.name_zh === "中国" ||
+        region.slug === "china" ||
+        region.code === "CN" ||
+        region.code === "CHN"),
+  );
+}
+
+function publishedSignalsOnly(signals: readonly Signal[]): Signal[] {
+  return signals.filter(
+    (signal) =>
+      signal.review_status === "published" &&
+      signal.published_at !== null &&
+      signal.is_demo !== true,
+  );
+}
+
+function publishedMetricsOnly(metrics: readonly MarketMetric[]): MarketMetric[] {
+  return metrics.filter(
+    (metric) => metric.is_published === true && metric.is_demo !== true,
+  );
+}
+
+export interface ChinaProvinceMarketAtlasProps {
+  /** The regions table is the only province registry used by this component. */
+  regions: readonly Region[];
+  /** Optional explicit China country row id; recommended when integrating. */
+  chinaRegionId?: string;
+  /** Records are defensively filtered again even when supplied by a public query. */
+  signals?: readonly Signal[];
+  marketMetrics?: readonly MarketMetric[];
+  initialProvinceId?: string;
+  initialTopicId?: ChinaMarketTopicId;
+  className?: string;
+  onProvinceChange?: (provinceId: string) => void;
+  onTopicChange?: (topicId: ChinaMarketTopicId) => void;
+}
+
+/**
+ * Read-only province/topic explorer. Seven topic cards remain an availability
+ * scaffold until a published, field-level topic model exists; generic Signals
+ * and Metrics are never inferred into topic facts.
+ */
+export function ChinaProvinceMarketAtlas({
+  regions,
+  chinaRegionId,
+  signals = [],
+  marketMetrics = [],
+  initialProvinceId,
+  initialTopicId = "trading-rules",
+  className,
+  onProvinceChange,
+  onTopicChange,
+}: ChinaProvinceMarketAtlasProps) {
+  const chinaRegion = findChinaRegion(regions, chinaRegionId);
+  const provinces = useMemo(
+    () =>
+      chinaRegion
+        ? regions.filter(
+            (region) =>
+              region.region_type === "province" &&
+              region.parent_id === chinaRegion.id,
+          ).sort((left, right) =>
+            regionLabel(left).localeCompare(regionLabel(right), "zh-CN"),
+          )
+        : [],
+    [chinaRegion, regions],
+  );
+  const publishedSignals = useMemo(() => publishedSignalsOnly(signals), [signals]);
+  const publishedMetrics = useMemo(
+    () => publishedMetricsOnly(marketMetrics),
+    [marketMetrics],
+  );
+  const provinceIds = useMemo(
+    () => new Set(provinces.map((province) => province.id)),
+    [provinces],
+  );
+  const chinaSignals = publishedSignals.filter(
+    (signal) => signal.region_id && provinceIds.has(signal.region_id),
+  );
+  const chinaMetrics = publishedMetrics.filter((metric) =>
+    provinceIds.has(metric.region_id),
+  );
+
+  const [activeProvinceId, setActiveProvinceId] = useState(initialProvinceId ?? "");
+  const [activeTopicId, setActiveTopicId] =
+    useState<ChinaMarketTopicId>(initialTopicId);
+  const [query, setQuery] = useState("");
+
+  const activeTopic =
+    CHINA_MARKET_TOPICS.find((topic) => topic.id === activeTopicId) ??
+    CHINA_MARKET_TOPICS[0];
+  const activeProvince =
+    provinces.find((province) => province.id === activeProvinceId) ??
+    provinces.find((province) => province.slug === "shandong") ??
+    provinces[0];
+
+  const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
+  const filteredProvinces = provinces.filter((province) =>
+    [province.name_zh, province.name_en, province.code, province.slug]
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase("zh-CN")
+      .includes(normalizedQuery),
+  );
+
+  const activeProvinceSignals = activeProvince
+    ? chinaSignals.filter((signal) => signal.region_id === activeProvince.id)
+    : [];
+  const activeProvinceMetrics = activeProvince
+    ? chinaMetrics.filter((metric) => metric.region_id === activeProvince.id)
+    : [];
+  const publishedRecordCount = chinaSignals.length + chinaMetrics.length;
+  const hasExpectedProvinceRegistry = provinces.length === 31;
+
+  function selectProvince(province: Region) {
+    setActiveProvinceId(province.id);
+    onProvinceChange?.(province.id);
+  }
+
+  function selectTopic(topic: TopicDefinition) {
+    setActiveTopicId(topic.id);
+    onTopicChange?.(topic.id);
+  }
+
+  function handleTopicKeyDown(
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) {
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % CHINA_MARKET_TOPICS.length;
+    if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + CHINA_MARKET_TOPICS.length) % CHINA_MARKET_TOPICS.length;
+    }
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = CHINA_MARKET_TOPICS.length - 1;
+    if (nextIndex === null) return;
+
+    event.preventDefault();
+    const topic = CHINA_MARKET_TOPICS[nextIndex];
+    selectTopic(topic);
+    document.getElementById(`china-topic-${topic.id}`)?.focus();
+  }
+
+  if (!chinaRegion) {
+    return (
+      <section
+        className={classNames(styles.atlas, styles.configurationState, className)}
+        aria-labelledby="china-market-atlas-title"
+      >
+        <div className={styles.configurationCard}>
+          <span>REGION CONFIGURATION REQUIRED</span>
+          <h2 id="china-market-atlas-title">未找到中国地区记录</h2>
+          <p>
+            请传入 regions 表数据并提供中国 country 记录；组件不会在前端创建或猜测省份。
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      id="china-market-atlas"
+      className={classNames(styles.atlas, className)}
+      aria-labelledby="china-market-atlas-title"
+    >
+      <header className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <div className={styles.eyebrow}>China provincial intelligence / 中国省级台账</div>
+          <h2 id="china-market-atlas-title">
+            {provinces.length || "—"} 省级地区
+            <br />
+            <em>
+              电力市场
+              <br />
+              专题矩阵
+            </em>
+          </h2>
+          <p>
+            七类电力市场与储能专题按数据库中的中国省级地区分别展示。通用公开记录未经字段级映射，不会被推断为专题事实。
+          </p>
+          <div className={styles.boundaryFlag} data-complete={hasExpectedProvinceRegistry}>
+            <span aria-hidden="true" />
+            {hasExpectedProvinceRegistry
+              ? "REGIONS TABLE · 31 / 31"
+              : `REGION CONFIG INCOMPLETE · ${provinces.length} / 31`}
+          </div>
+        </div>
+
+        <aside className={styles.coverageCard} aria-label="已发布数据可用性">
+          <div className={styles.coverageTopline}>
+            <span>PUBLISHED AVAILABILITY</span>
+            <strong>{activeTopic.index} / 07</strong>
+          </div>
+          <div className={styles.coverageValue}>
+            <strong>{publishedRecordCount > 0 ? publishedRecordCount : "暂无"}</strong>
+            <span>{publishedRecordCount > 0 ? "条通用公开记录" : "已发布专题数据"}</span>
+          </div>
+          <div className={styles.availabilityLine} aria-hidden="true">
+            <span />
+          </div>
+          <dl className={styles.coverageMeta}>
+            <div>
+              <dt>Published Signals</dt>
+              <dd>{chinaSignals.length} 条已发布</dd>
+            </div>
+            <div>
+              <dt>Published Metrics</dt>
+              <dd>{chinaMetrics.length} 条已发布</dd>
+            </div>
+            <div>
+              <dt>Province rows</dt>
+              <dd>{provinces.length} 条地区记录</dd>
+            </div>
+          </dl>
+          <p className={styles.coverageRule}>
+            当前暂无字段级专题发布模型，因此不计算百分比。通用 Signal / Metric 仅作公开记录计数，不自动填入下方专题字段。
+          </p>
+        </aside>
+      </header>
+
+      <div className={styles.topicRail}>
+        <div className={styles.railLabel}>
+          <span>Topic ledger</span>
+          <strong>七类专题</strong>
+        </div>
+        <div className={styles.topicTabs} role="tablist" aria-label="中国电力市场专题">
+          {CHINA_MARKET_TOPICS.map((topic, index) => {
+            const selected = topic.id === activeTopic.id;
+            return (
+              <button
+                type="button"
+                role="tab"
+                id={`china-topic-${topic.id}`}
+                aria-selected={selected}
+                aria-controls="china-topic-panel"
+                tabIndex={selected ? 0 : -1}
+                className={classNames(styles.topicTab, selected && styles.topicTabActive)}
+                onClick={() => selectTopic(topic)}
+                onKeyDown={(event) => handleTopicKeyDown(event, index)}
+                key={topic.id}
+              >
+                <span>{topic.index}</span>
+                <strong>{topic.shortLabel}</strong>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div
+        className={styles.topicIntro}
+        role="tabpanel"
+        id="china-topic-panel"
+        aria-labelledby={`china-topic-${activeTopic.id}`}
+      >
+        <div>
+          <span>{activeTopic.index} / TOPIC</span>
+          <h3>{activeTopic.title}</h3>
+        </div>
+        <p>{activeTopic.description}</p>
+      </div>
+
+      <div className={styles.workspace}>
+        <section className={styles.provincePanel} aria-labelledby="province-directory-title">
+          <div className={styles.panelHeader}>
+            <div>
+              <span>Province directory</span>
+              <h3 id="province-directory-title">省份索引</h3>
+            </div>
+            <span className={styles.resultCount} aria-live="polite">
+              {filteredProvinces.length} / {provinces.length}
+            </span>
+          </div>
+
+          <label className={styles.searchBox}>
+            <span className={styles.srOnly}>搜索省份</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索省份、代码或 slug…"
+              autoComplete="off"
+            />
+            {query ? (
+              <button type="button" onClick={() => setQuery("")} aria-label="清除省份搜索">
+                ×
+              </button>
+            ) : null}
+          </label>
+
+          {filteredProvinces.length ? (
+            <div className={styles.provinceGrid} aria-label="中国省级地区">
+              {filteredProvinces.map((province) => {
+                const selected = province.id === activeProvince?.id;
+                const signalCount = chinaSignals.filter(
+                  (signal) => signal.region_id === province.id,
+                ).length;
+                const metricCount = chinaMetrics.filter(
+                  (metric) => metric.region_id === province.id,
+                ).length;
+                const recordCount = signalCount + metricCount;
+                const availabilityState =
+                  recordCount > 0 ? "generic_records" : "no_topic_data";
+                return (
+                  <button
+                    type="button"
+                    className={classNames(
+                      styles.provinceButton,
+                      selected && styles.provinceButtonActive,
+                    )}
+                    data-state={availabilityState}
+                    aria-pressed={selected}
+                    aria-label={
+                      recordCount > 0
+                        ? `${regionLabel(province)}，${recordCount} 条通用公开记录，尚未映射为专题字段`
+                        : `${regionLabel(province)}，暂无已发布专题字段`
+                    }
+                    onClick={() => selectProvince(province)}
+                    key={province.id}
+                  >
+                    <span className={styles.provinceShort}>{regionMonogram(province)}</span>
+                    <span className={styles.provinceName}>{regionLabel(province)}</span>
+                    <i aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.noResults}>没有匹配的省级地区。</div>
+          )}
+
+          <div className={styles.statusLegend} aria-label="公开记录状态图例">
+            <span data-state="no_topic_data">
+              <i aria-hidden="true" /> 暂无专题字段
+            </span>
+            <span data-state="generic_records">
+              <i aria-hidden="true" /> 仅有通用公开记录
+            </span>
+          </div>
+        </section>
+
+        {activeProvince ? (
+          <article className={styles.detailPanel} aria-live="polite">
+            <header className={styles.detailHeader}>
+              <div className={styles.provinceMonogram} aria-hidden="true">
+                {regionMonogram(activeProvince)}
+              </div>
+              <div className={styles.detailTitle}>
+                <span>
+                  {activeProvince.code || activeProvince.slug} / {activeTopic.index}
+                </span>
+                <h3>{regionLabel(activeProvince)}</h3>
+                <p>{activeTopic.title}</p>
+              </div>
+              <span className={styles.detailStatus} data-state="no_topic_data">
+                暂无已发布专题数据
+              </span>
+            </header>
+
+            <div className={styles.fieldGrid}>
+              {activeTopic.fields.map((definition) => (
+                <section
+                  className={styles.fieldCard}
+                  data-state="no_topic_data"
+                  key={definition.key}
+                >
+                  <div className={styles.fieldTopline}>
+                    <span>{definition.valueKind}</span>
+                    <strong data-state="no_topic_data">暂无已发布数据</strong>
+                  </div>
+                  <h4>{definition.label}</h4>
+                  <p>{definition.description}</p>
+                  <div className={styles.fieldValue} data-empty="true">
+                    <strong>—</strong>
+                  </div>
+                  <div className={styles.sourceRow}>
+                    <span>尚无字段级公开来源</span>
+                    <time>—</time>
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <footer className={styles.detailFooter}>
+              <div>
+                <span>通用已发布记录（非专题结论）</span>
+                <strong>
+                  {activeProvinceSignals.length} Signals · {activeProvinceMetrics.length} Metrics
+                </strong>
+              </div>
+              <p>
+                通用记录不能自动证明当前专题字段。后续应由发布流程建立字段级来源、原始单位和适用范围后再展示具体值。
+              </p>
+            </footer>
+          </article>
+        ) : (
+          <div className={styles.noProvinceState}>
+            <strong>暂无省级地区</strong>
+            <p>请先在 regions 表中建立 parent_id 指向中国的 province 记录。</p>
+          </div>
+        )}
+      </div>
+
+      <footer className={styles.methodology}>
+        <span>Availability protocol</span>
+        <p>
+          省份身份完全来自 regions 表。组件只统计 published_at 非空且非 Demo 的 Published Signal，以及 is_published=true 且非 Demo 的 Market Metric；缺失数值显示“—”，不格式化为 0，也不从通用记录推断七类专题结论。
+        </p>
+      </footer>
+    </section>
+  );
+}
