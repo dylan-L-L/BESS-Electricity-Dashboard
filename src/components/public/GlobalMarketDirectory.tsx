@@ -1,4 +1,5 @@
 import type { MarketMetric, Region, Signal } from "@/lib/types";
+import { compareContinents, compareCountries } from "@/lib/region-order";
 
 import styles from "./GlobalMarketDirectory.module.css";
 
@@ -136,12 +137,17 @@ export function GlobalMarketDirectory({
   representativeCountryLimit = 6,
   className,
 }: GlobalMarketDirectoryProps) {
-  const continents = regions.filter((region) => region.region_type === "continent");
+  const continents = regions
+    .filter((region) => region.region_type === "continent")
+    .sort(compareContinents);
   const activeRegion = regions.find((region) => region.id === activeRegionId);
   const continentEntries = continents.map((continent) => {
-    const countries = regions.filter(
-      (region) => region.region_type === "country" && region.parent_id === continent.id,
-    );
+    const countries = regions
+      .filter(
+        (region) =>
+          region.region_type === "country" && region.parent_id === continent.id,
+      )
+      .sort(compareCountries);
     const counts = countPublishedRecords(continent, regions, signals, marketMetrics);
     const rankedCountries = countries
       .map((country) => ({
@@ -151,7 +157,7 @@ export function GlobalMarketDirectory({
       .sort((left, right) => {
         const realDelta = realRecordCount(right.counts) - realRecordCount(left.counts);
         if (realDelta !== 0) return realDelta;
-        return regionLabel(left.region).localeCompare(regionLabel(right.region), "zh-CN");
+        return compareCountries(left.region, right.region);
       });
 
     return {

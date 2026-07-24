@@ -20,6 +20,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href="/admin/signals">Signals</Link>
           <Link href="/admin/signals/new">新建 Signal</Link>
           <Link href="/admin/market-metrics">市场指标</Link>
+          <Link href="/admin/province-topics">省级七专题</Link>
+          <Link href="/admin/province-topics/new">新建专题记录</Link>
           <Link href="/admin/imports">数据导入</Link>
           <Link href="/">公开看板 ↗</Link>
         </nav>

@@ -28,6 +28,7 @@ export default async function RegionPage({
       regions={data.regions}
       signals={data.signals}
       marketMetrics={data.marketMetrics}
+      provinceTopics={data.provinceTopics}
       activeRegion={region}
       searchQuery={q}
     />

@@ -40,9 +40,21 @@ export class SignalNotFoundError extends DomainError {
   }
 }
 
+export class ProvinceTopicNotFoundError extends DomainError {
+  constructor(recordId: string) {
+    super(`省级专题记录 ${recordId} 不存在`, "NOT_FOUND", 404);
+  }
+}
+
 export class DraftValidationError extends DomainError {
   constructor(fieldErrors: Record<string, string[]>) {
     super("Draft input is invalid", "INVALID_DRAFT", 422, fieldErrors);
+  }
+}
+
+export class ProvinceTopicDraftValidationError extends DomainError {
+  constructor(fieldErrors: Record<string, string[]>) {
+    super("省级专题草稿字段不符合要求", "INVALID_DRAFT", 422, fieldErrors);
   }
 }
 
@@ -50,6 +62,17 @@ export class PublishValidationError extends DomainError {
   constructor(fieldErrors: Record<string, string[]>) {
     super(
       "Signal is missing required publication fields",
+      "NOT_PUBLISHABLE",
+      422,
+      fieldErrors,
+    );
+  }
+}
+
+export class ProvinceTopicPublishValidationError extends DomainError {
+  constructor(fieldErrors: Record<string, string[]>) {
+    super(
+      "省级专题记录尚未达到发布要求",
       "NOT_PUBLISHABLE",
       422,
       fieldErrors,

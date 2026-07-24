@@ -1,10 +1,10 @@
 import Link from "next/link";
 
-import { getAdminDashboardData } from "@/lib/data/admin";
+import { getAdminSignalListData } from "@/lib/data/admin";
 import { normalizedStatusLabel, reviewStatusLabel } from "@/lib/domain/status";
 
 export default async function AdminSignalsPage() {
-  const { signals, regions } = await getAdminDashboardData();
+  const { signals, regions } = await getAdminSignalListData();
   const regionNames = new Map(regions.map((region) => [region.id, region.name_zh]));
 
   return (

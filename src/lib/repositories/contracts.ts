@@ -1,9 +1,13 @@
 import type {
   MarketMetric,
+  ProvinceTopicField,
+  ProvinceTopicRecord,
+  ProvinceTopicRecordWithFields,
   Region,
   ReviewStatus,
   Signal,
 } from "../types";
+import type { ChinaMarketTopicId } from "../china-market/taxonomy";
 
 export interface AdminSignalQuery {
   region_id?: string;
@@ -58,4 +62,39 @@ export interface MarketMetricRepository {
   getAdminById(id: string): Promise<MarketMetric | null>;
   create(input: CreateMarketMetricRecord): Promise<MarketMetric>;
   update(id: string, input: UpdateMarketMetricRecord): Promise<MarketMetric>;
+}
+
+export interface AdminProvinceTopicQuery {
+  region_id?: string;
+  topic_id?: ChinaMarketTopicId;
+  review_status?: ReviewStatus;
+}
+
+export interface PublicProvinceTopicQuery {
+  region_id?: string;
+  region_ids?: string[];
+  topic_id?: ChinaMarketTopicId;
+}
+
+export type CreateProvinceTopicRecord = Omit<ProvinceTopicRecord, "id">;
+export type UpdateProvinceTopicRecord = Partial<
+  Omit<ProvinceTopicRecord, "id" | "created_at">
+>;
+export type CreateProvinceTopicField = Omit<ProvinceTopicField, "id">;
+
+export interface ProvinceTopicRepository {
+  listAdmin(query?: AdminProvinceTopicQuery): Promise<ProvinceTopicRecord[]>;
+  listPublic(
+    query?: PublicProvinceTopicQuery,
+  ): Promise<ProvinceTopicRecordWithFields[]>;
+  getAdminById(id: string): Promise<ProvinceTopicRecordWithFields | null>;
+  create(input: CreateProvinceTopicRecord): Promise<ProvinceTopicRecord>;
+  update(
+    id: string,
+    input: UpdateProvinceTopicRecord,
+  ): Promise<ProvinceTopicRecord>;
+  replaceFields(
+    recordId: string,
+    input: CreateProvinceTopicField[],
+  ): Promise<ProvinceTopicField[]>;
 }

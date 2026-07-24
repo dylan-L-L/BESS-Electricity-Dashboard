@@ -3,16 +3,29 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   AdminSignalQuery,
   CreateMarketMetricRecord,
+  CreateProvinceTopicField,
+  CreateProvinceTopicRecord,
   CreateSignalRecord,
   MarketMetricRepository,
+  AdminProvinceTopicQuery,
+  ProvinceTopicRepository,
   PublicMarketMetricQuery,
+  PublicProvinceTopicQuery,
   PublicSignalQuery,
   RegionRepository,
   SignalRepository,
   UpdateMarketMetricRecord,
+  UpdateProvinceTopicRecord,
   UpdateSignalRecord,
 } from "./contracts";
-import type { MarketMetric, Region, Signal } from "../types";
+import type {
+  MarketMetric,
+  ProvinceTopicField,
+  ProvinceTopicRecord,
+  ProvinceTopicRecordWithFields,
+  Region,
+  Signal,
+} from "../types";
 
 const PUBLIC_SIGNAL_COLUMNS = [
   "id",
@@ -33,6 +46,29 @@ const PUBLIC_SIGNAL_COLUMNS = [
   "reviewer_note",
   "review_status",
   "published_at",
+  "is_demo",
+  "created_at",
+  "updated_at",
+].join(",");
+
+const PUBLIC_PROVINCE_TOPIC_COLUMNS = [
+  "id",
+  "region_id",
+  "topic_id",
+  "title",
+  "summary",
+  "legal_status",
+  "operational_status",
+  "valid_from",
+  "valid_to",
+  "as_of_date",
+  "source_url",
+  "source_name",
+  "source_published_at",
+  "reviewer_note",
+  "review_status",
+  "published_at",
+  "reviewed_at",
   "is_demo",
   "created_at",
   "updated_at",
@@ -212,5 +248,138 @@ export class SupabaseMarketMetricRepository implements MarketMetricRepository {
       .single();
     throwIfError("update market metric", error);
     return data as MarketMetric;
+  }
+}
+
+export class SupabaseProvinceTopicRepository
+  implements ProvinceTopicRepository
+{
+  constructor(private readonly client: SupabaseClient) {}
+
+  async listAdmin(
+    query: AdminProvinceTopicQuery = {},
+  ): Promise<ProvinceTopicRecord[]> {
+    let request = this.client
+      .from("china_province_topic_records")
+      .select("*")
+      .order("updated_at", { ascending: false });
+    if (query.region_id) request = request.eq("region_id", query.region_id);
+    if (query.topic_id) request = request.eq("topic_id", query.topic_id);
+    if (query.review_status) {
+      request = request.eq("review_status", query.review_status);
+    }
+    const { data, error } = await request;
+    throwIfError("list admin province topics", error);
+    return (data ?? []) as ProvinceTopicRecord[];
+  }
+
+  async listPublic(
+    query: PublicProvinceTopicQuery = {},
+  ): Promise<ProvinceTopicRecordWithFields[]> {
+    let request = this.client
+      .from("china_province_topic_records")
+      .select(PUBLIC_PROVINCE_TOPIC_COLUMNS)
+      .eq("review_status", "published")
+      .not("published_at", "is", null)
+      .order("published_at", { ascending: false });
+    if (query.region_ids?.length) {
+      request = request.in("region_id", query.region_ids);
+    } else if (query.region_id) {
+      request = request.eq("region_id", query.region_id);
+    }
+    if (query.topic_id) request = request.eq("topic_id", query.topic_id);
+
+    const { data, error } = await request;
+    throwIfError("list published province topics", error);
+    return this.withFields(
+      (data ?? []) as unknown as ProvinceTopicRecord[],
+    );
+  }
+
+  async getAdminById(
+    id: string,
+  ): Promise<ProvinceTopicRecordWithFields | null> {
+    const { data, error } = await this.client
+      .from("china_province_topic_records")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    throwIfError("read admin province topic", error);
+    if (!data) return null;
+    const [record] = await this.withFields([
+      data as unknown as ProvinceTopicRecord,
+    ]);
+    return record ?? null;
+  }
+
+  async create(
+    input: CreateProvinceTopicRecord,
+  ): Promise<ProvinceTopicRecord> {
+    const { data, error } = await this.client
+      .from("china_province_topic_records")
+      .insert(input)
+      .select("*")
+      .single();
+    throwIfError("create province topic", error);
+    return data as ProvinceTopicRecord;
+  }
+
+  async update(
+    id: string,
+    input: UpdateProvinceTopicRecord,
+  ): Promise<ProvinceTopicRecord> {
+    const { data, error } = await this.client
+      .from("china_province_topic_records")
+      .update(input)
+      .eq("id", id)
+      .select("*")
+      .single();
+    throwIfError("update province topic", error);
+    return data as ProvinceTopicRecord;
+  }
+
+  async replaceFields(
+    recordId: string,
+    input: CreateProvinceTopicField[],
+  ): Promise<ProvinceTopicField[]> {
+    const { error: deleteError } = await this.client
+      .from("china_province_topic_fields")
+      .delete()
+      .eq("record_id", recordId);
+    throwIfError("clear province topic fields", deleteError);
+
+    if (!input.length) return [];
+    const { data, error } = await this.client
+      .from("china_province_topic_fields")
+      .insert(input)
+      .select("*");
+    throwIfError("replace province topic fields", error);
+    return (data ?? []) as ProvinceTopicField[];
+  }
+
+  private async withFields(
+    records: ProvinceTopicRecord[],
+  ): Promise<ProvinceTopicRecordWithFields[]> {
+    if (!records.length) return [];
+    const recordIds = records.map((record) => record.id);
+    const { data, error } = await this.client
+      .from("china_province_topic_fields")
+      .select("*")
+      .in("record_id", recordIds)
+      .order("sort_order")
+      .order("field_key");
+    throwIfError("read province topic fields", error);
+
+    const fieldsByRecord = new Map<string, ProvinceTopicField[]>();
+    for (const field of (data ?? []) as ProvinceTopicField[]) {
+      const fields = fieldsByRecord.get(field.record_id) ?? [];
+      fields.push(field);
+      fieldsByRecord.set(field.record_id, fields);
+    }
+
+    return records.map((record) => ({
+      ...record,
+      fields: fieldsByRecord.get(record.id) ?? [],
+    }));
   }
 }

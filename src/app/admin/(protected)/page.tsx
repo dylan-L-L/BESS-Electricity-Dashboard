@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getAdminDashboardData } from "@/lib/data/admin";
 
 export default async function AdminDashboardPage() {
-  const { signals, metrics, regions } = await getAdminDashboardData();
+  const { signals, metrics, provinceTopics, regions } = await getAdminDashboardData();
   const published = signals.filter((signal) => signal.review_status === "published").length;
   const pending = signals.filter((signal) => signal.review_status === "pending_review").length;
 
@@ -15,8 +15,9 @@ export default async function AdminDashboardPage() {
         <article><span>已发布</span><strong>{published}</strong></article>
         <article><span>地区</span><strong>{regions.length}</strong></article>
         <article><span>市场指标</span><strong>{metrics.length}</strong></article>
+        <article><span>省级专题</span><strong>{provinceTopics.length}</strong></article>
       </section>
-      <section className="admin-panel"><div className="admin-panel-header"><div><span className="section-kicker">Publishing gate</span><h2>发布检查</h2></div></div><p>发布必须具备地区、标题、摘要、原文链接、规范状态和人工确认信息。发布身份与时间由服务端写入，公开 API 仅查询 `published`。</p><div className="admin-quick-actions"><Link href="/admin/signals">打开 Signal 列表</Link><Link href="/admin/market-metrics">维护市场指标</Link></div></section>
+      <section className="admin-panel"><div className="admin-panel-header"><div><span className="section-kicker">Publishing gate</span><h2>发布检查</h2></div></div><p>Signal、通用市场指标和省级七专题是三个独立模块。七专题记录必须逐字段说明值或缺失状态，并保存字段级证据定位；发布身份与时间由服务端写入。</p><div className="admin-quick-actions"><Link href="/admin/signals">打开 Signal 列表</Link><Link href="/admin/market-metrics">维护市场指标</Link><Link href="/admin/province-topics">维护省级七专题</Link></div></section>
     </>
   );
 }

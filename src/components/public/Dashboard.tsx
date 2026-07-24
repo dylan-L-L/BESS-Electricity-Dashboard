@@ -1,10 +1,13 @@
 import type {
   MarketMetric,
   NormalizedStatus,
+  ProvinceTopicRecordWithFields,
   Region,
   Signal,
 } from "@/lib/types";
 import Link from "next/link";
+
+import { compareContinents, compareCountries } from "@/lib/region-order";
 
 import { ChinaProvinceMarketAtlas } from "./ChinaProvinceMarketAtlas";
 import { GlobalMarketDirectory } from "./GlobalMarketDirectory";
@@ -141,8 +144,12 @@ export function RegionSelector({
   getRegionHref = defaultRegionHref,
 }: RegionSelectorProps) {
   const globalRegion = regions.find((region) => region.region_type === "global");
-  const continents = regions.filter((region) => region.region_type === "continent");
-  const countries = regions.filter((region) => region.region_type === "country");
+  const continents = regions
+    .filter((region) => region.region_type === "continent")
+    .sort(compareContinents);
+  const countries = regions
+    .filter((region) => region.region_type === "country")
+    .sort(compareCountries);
   const provinces = regions.filter((region) => region.region_type === "province");
   const published = publishedSignalsOnly(signals);
   const realPublished = published.filter((signal) => !isDemo(signal));
@@ -474,6 +481,7 @@ export interface DashboardProps {
   regions: Region[];
   signals: Signal[];
   marketMetrics: MarketMetric[];
+  provinceTopics: ProvinceTopicRecordWithFields[];
   activeRegion?: Region | null;
   searchQuery?: string;
   searchAction?: string;
@@ -485,6 +493,7 @@ export function Dashboard({
   regions,
   signals,
   marketMetrics,
+  provinceTopics,
   activeRegion,
   searchQuery = "",
   searchAction,
@@ -500,6 +509,12 @@ export function Dashboard({
   const publishedMetrics = publishedMetricsOnly(marketMetrics).filter(
     (metric) => !regionIds || regionIds.has(metric.region_id),
   );
+  const scopedProvinceTopics = provinceTopics.filter(
+    (record) =>
+      record.review_status === "published" &&
+      record.published_at !== null &&
+      (!regionIds || regionIds.has(record.region_id)),
+  );
   const realPublishedSignals = publishedSignals.filter((signal) => !isDemo(signal));
   const demoPublishedSignals = publishedSignals.filter(isDemo);
   const realPublishedMetrics = publishedMetrics.filter((metric) => !metric.is_demo);
@@ -507,7 +522,9 @@ export function Dashboard({
   // Regions are structural seed/reference rows. A real Signal must never inherit
   // a Demo label only because its region was preloaded by the MVP seed.
   const hasDemoData =
-    publishedSignals.some(isDemo) || publishedMetrics.some((metric) => metric.is_demo);
+    publishedSignals.some(isDemo) ||
+    publishedMetrics.some((metric) => metric.is_demo) ||
+    scopedProvinceTopics.some((record) => record.is_demo);
   const statusCount = (status: string) =>
     realPublishedSignals.filter((signal) => signal.normalized_status === status).length;
   const activeName = activeRegion ? regionName(activeRegion) : "全局观察";
@@ -529,7 +546,10 @@ export function Dashboard({
       activeRegion.region_type === "global" ||
       activeRegion.region_type === "continent",
   );
-  const demoRecordCount = demoPublishedSignals.length + demoPublishedMetrics.length;
+  const demoRecordCount =
+    demoPublishedSignals.length +
+    demoPublishedMetrics.length +
+    scopedProvinceTopics.filter((record) => record.is_demo).length;
 
   return (
     <>
@@ -666,6 +686,7 @@ export function Dashboard({
               chinaRegionId={chinaRegion.id}
               signals={signals}
               marketMetrics={marketMetrics}
+              provinceTopics={provinceTopics}
               initialProvinceId={
                 activeRegion?.region_type === "province" ? activeRegion.id : undefined
               }

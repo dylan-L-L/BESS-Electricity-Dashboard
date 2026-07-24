@@ -107,6 +107,50 @@
 
 seed 中的市场指标仅为工程夹具：`is_demo = true`、`value = NULL`，标题和备注都显式标记 `DEMO`。它们不表示真实市场数据。
 
+## `china_province_topic_records`
+
+中国省份 × 七大专题的审核发布单元。该表不保存通用事件，也不替代 `market_metrics`；它承载前端省级专题矩阵中一组字段共同的省份、专题、状态、有效期和主来源。
+
+| 字段 | 类型 | 必填 | 发布必填 | 说明 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | 是 | 主键 |
+| `region_id` | `uuid` | 是 | 是 | 必须是 `parent.code = CN` 的省级地区 |
+| `topic_id` | `province_topic_id` | 是 | 是 | 七大专题稳定 ID |
+| `title` | `text` | 否 | 是 | 本次核验/发布记录标题 |
+| `summary` | `text` | 否 | 否 | 适用范围、口径和不能推断的事项 |
+| `legal_status` | `province_topic_legal_status` | 否 | 是 | 文件法律/政策状态 |
+| `operational_status` | `province_topic_operational_status` | 否 | 否 | 市场运行阶段；不得代替法律状态 |
+| `valid_from` / `valid_to` | `date` | 否 | 否 | 规则有效期，结束日不得早于开始日 |
+| `as_of_date` | `date` | 否 | 是 | 人工核验截至日期 |
+| `source_url` / `source_name` | `text` | 否 | 是 | 本条记录的主来源；发布链接仅允许 HTTP(S) |
+| `source_published_at` | `date` | 否 | 否 | 主来源发布日期 |
+| `reviewer_note` | `text` | 否 | 是 | 人工审核说明 |
+| `review_status` | `review_status` | 是 | 是 | 草稿、待审、已发布或驳回 |
+| `published_at` / `reviewer_id` / `reviewed_at` | 时间/UUID | 否 | 是 | 发布身份和时间由服务端及数据库触发器绑定 |
+| `is_demo` | `boolean` | 是 | 是 | Demo 标记 |
+
+发布时数据库会确认所属地区确为中国省级节点、该专题拥有规定数量的字段行，并且所有有值字段均具有字段级来源。已发布记录的子字段不可被直接增删改；应用必须先将父记录退回 `pending_review`，编辑后重新发布。
+
+## `china_province_topic_fields`
+
+每行对应公开专题页面的一张字段卡片。字段集合由共享 Taxonomy 决定；管理员表单、领域服务、数据库校验和公开页面使用同一组专题/字段键。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `record_id` | `uuid` | 是 | 所属专题发布记录 |
+| `field_key` | `text` | 是 | 专题内稳定字段键；数据库拒绝跨专题字段 |
+| `value_text` | `text` | 否 | 按原文保留的展示值、公式或规则摘要 |
+| `value_numeric` | `numeric` | 否 | 仅供未来同口径比较；不能替代原始展示值 |
+| `unit` | `text` | 否 | 原始单位，不自动换算 |
+| `coverage_status` | `province_topic_field_coverage_status` | 是 | `available`、`not_covered`、`not_published`、`not_applicable`、`stale` 或 `conflicting` |
+| `applicability` | `text` | 否 | 电压等级、项目类型、用户类别、执行地区等 |
+| `source_url` / `source_name` | `text` | 否 | 字段来源；表单留空时保存为主来源的显式副本 |
+| `source_locator` | `text` | 否 | 页码、表名、行列、条款或段落定位；有值字段发布时必填 |
+| `evidence_excerpt` | `text` | 否 | 短摘录或核验备注 |
+| `sort_order` | `integer` | 是 | 由 Taxonomy 确定的展示顺序 |
+
+缺失值必须使用 `NULL + coverage_status`，不能写成 0。原文明确为零时，`value_text = '0'` 且可同时保存 `value_numeric = 0`。
+
 ## `import_jobs`
 
 私有导入任务。保存输入类型、URL/文件名、私有 Storage 路径、MIME/大小、原文件与内容 SHA-256、提取文本、工作表预览/映射等 `input_metadata`、任务计数、失败阶段、用户错误、私有技术错误、重试标记以及创建人/时间。URL 使用 normalized/canonical/content hash 基础去重；PDF/XLSX/CSV 使用原文件 hash 去重。Excel/CSV 另有生成列 `workbook_source_key`，只对原文件名做大小写与首尾空白归一，用于保守界定“同源工作簿”。

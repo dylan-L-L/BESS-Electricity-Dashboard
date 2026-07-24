@@ -4,17 +4,25 @@ import { getSupabaseConfig } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   SupabaseMarketMetricRepository,
+  SupabaseProvinceTopicRepository,
   SupabaseRegionRepository,
   SupabaseSignalRepository,
 } from "@/lib/repositories/supabase";
 import { SignalService } from "@/lib/services/signal-service";
-import type { MarketMetric, Region, Signal } from "@/lib/types";
+import { ProvinceTopicService } from "@/lib/services/province-topic-service";
+import type {
+  MarketMetric,
+  ProvinceTopicRecordWithFields,
+  Region,
+  Signal,
+} from "@/lib/types";
 
 export type PublicDashboardData = {
   configured: boolean;
   regions: Region[];
   signals: Signal[];
   marketMetrics: MarketMetric[];
+  provinceTopics: ProvinceTopicRecordWithFields[];
 };
 
 const EMPTY_DATA: PublicDashboardData = {
@@ -22,6 +30,7 @@ const EMPTY_DATA: PublicDashboardData = {
   regions: [],
   signals: [],
   marketMetrics: [],
+  provinceTopics: [],
 };
 
 export async function getPublicDashboardData(): Promise<PublicDashboardData> {
@@ -31,14 +40,24 @@ export async function getPublicDashboardData(): Promise<PublicDashboardData> {
   const regionRepository = new SupabaseRegionRepository(client);
   const signalService = new SignalService(new SupabaseSignalRepository(client));
   const metricRepository = new SupabaseMarketMetricRepository(client);
+  const provinceTopicService = new ProvinceTopicService(
+    new SupabaseProvinceTopicRepository(client),
+  );
 
-  const [regions, signals, marketMetrics] = await Promise.all([
+  const [regions, signals, marketMetrics, provinceTopics] = await Promise.all([
     regionRepository.list(),
     signalService.listPublic(),
     metricRepository.listPublic(),
+    provinceTopicService.listPublic(),
   ]);
 
-  return { configured: true, regions, signals, marketMetrics };
+  return {
+    configured: true,
+    regions,
+    signals,
+    marketMetrics,
+    provinceTopics,
+  };
 }
 
 export async function getPublishedSignalDetail(id: string) {

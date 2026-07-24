@@ -33,6 +33,7 @@ const publicAnon = createClient(supabaseUrl, anonKey, {
 
 let userId;
 let signalId;
+let provinceTopicId;
 let adminDb;
 
 async function json(url, init) {
@@ -155,8 +156,184 @@ try {
   const originalSource = await fetch(sourceUrl);
   assert.equal(originalSource.status, 200, "The original-source link should be visitable");
 
-  process.stdout.write("HTTP E2E passed: Auth → draft isolation → publish → Shandong page → source link\n");
+  const provinceTopicTitle = `[DEMO] 山东七专题 HTTP E2E ${runId}`;
+  const provinceTopicDraft = await json(`${appUrl}/api/admin/province-topics`, {
+    method: "POST",
+    headers: bearerHeaders,
+    body: JSON.stringify({
+      region_id: shandong.id,
+      topic_id: "trading-rules",
+      title: provinceTopicTitle,
+      summary: "仅用于验证省级七专题录入、证据、审核发布和公开展示，不代表真实市场规则。",
+      legal_status: "effective",
+      operational_status: "continuous",
+      valid_from: "2026-01-01",
+      valid_to: "",
+      as_of_date: "2026-07-24",
+      source_url: sourceUrl,
+      source_name: "Grid Ledger local topic E2E source",
+      source_published_at: "2026-01-01",
+      reviewer_note: "",
+      is_demo: true,
+      fields: [
+        {
+          field_key: "spot_day_ahead_rule",
+          value_text: `[DEMO] 日前规则 ${runId}`,
+          value_numeric: null,
+          unit: "",
+          coverage_status: "available",
+          applicability: "仅用于本地 E2E",
+          source_url: "",
+          source_name: "",
+          source_locator: "测试来源响应，第 1 项",
+          evidence_excerpt: "工程验证字段，不是业务事实。",
+        },
+        {
+          field_key: "spot_real_time_rule",
+          value_text: "",
+          value_numeric: null,
+          unit: "",
+          coverage_status: "not_published",
+          applicability: "",
+          source_url: "",
+          source_name: "",
+          source_locator: "",
+          evidence_excerpt: "工程验证缺失状态。",
+        },
+        {
+          field_key: "ancillary_trading_rule",
+          value_text: "",
+          value_numeric: null,
+          unit: "",
+          coverage_status: "not_covered",
+          applicability: "",
+          source_url: "",
+          source_name: "",
+          source_locator: "",
+          evidence_excerpt: "",
+        },
+        {
+          field_key: "retail_trading_rule",
+          value_text: "",
+          value_numeric: null,
+          unit: "",
+          coverage_status: "not_applicable",
+          applicability: "",
+          source_url: "",
+          source_name: "",
+          source_locator: "",
+          evidence_excerpt: "仅验证不适用状态。",
+        },
+      ],
+    }),
+  });
+  assert.equal(
+    provinceTopicDraft.response.status,
+    201,
+    JSON.stringify(provinceTopicDraft.body),
+  );
+  provinceTopicId = provinceTopicDraft.body.data.id;
+  assert.equal(provinceTopicDraft.body.data.review_status, "pending_review");
+  assert.equal(
+    provinceTopicDraft.body.data.fields[0].source_url,
+    sourceUrl,
+    "Blank field source should be stored as an explicit copy of the main source",
+  );
+
+  const hiddenTopicList = await json(
+    `${appUrl}/api/public/province-topics?region_id=${shandong.id}&topic_id=trading-rules`,
+  );
+  assert.equal(hiddenTopicList.response.status, 200);
+  assert.ok(
+    !hiddenTopicList.body.data.some((record) => record.id === provinceTopicId),
+    "Pending topic draft must stay out of the public API",
+  );
+
+  const { data: anonymousTopicRows, error: anonymousTopicReadError } =
+    await publicAnon
+      .from("china_province_topic_records")
+      .select("id,review_status")
+      .eq("id", provinceTopicId);
+  assert.ifError(anonymousTopicReadError);
+  assert.deepEqual(
+    anonymousTopicRows,
+    [],
+    "RLS must hide the topic draft from direct Data API reads",
+  );
+
+  const publishTopicResult = await json(
+    `${appUrl}/api/admin/province-topics/${provinceTopicId}/publish`,
+    {
+      method: "POST",
+      headers: bearerHeaders,
+      body: JSON.stringify({
+        reviewer_note: "已人工确认专题字段、覆盖状态和字段级来源定位",
+      }),
+    },
+  );
+  assert.equal(
+    publishTopicResult.response.status,
+    200,
+    JSON.stringify(publishTopicResult.body),
+  );
+  assert.equal(publishTopicResult.body.data.review_status, "published");
+  assert.equal(publishTopicResult.body.data.reviewer_id, userId);
+
+  const publishedTopicList = await json(
+    `${appUrl}/api/public/province-topics?region_id=${shandong.id}&topic_id=trading-rules`,
+  );
+  assert.equal(publishedTopicList.response.status, 200);
+  const publicTopic = publishedTopicList.body.data.find(
+    (record) => record.id === provinceTopicId,
+  );
+  assert.ok(publicTopic, "Published topic record should be visible");
+  assert.equal(
+    publicTopic.fields.find(
+      (field) => field.field_key === "spot_day_ahead_rule",
+    )?.value_text,
+    `[DEMO] 日前规则 ${runId}`,
+  );
+  assert.equal("reviewer_id" in publicTopic, false);
+  assert.equal("created_by" in publicTopic, false);
+
+  const publishedFieldId = publishTopicResult.body.data.fields[0].id;
+  const { error: immutableFieldError } = await adminDb
+    .from("china_province_topic_fields")
+    .update({ value_text: "不应允许绕过审核修改" })
+    .eq("id", publishedFieldId);
+  assert.ok(
+    immutableFieldError,
+    "Published topic fields must be immutable until the parent returns to draft",
+  );
+
+  const topicRegionPage = await fetch(`${appUrl}/regions/shandong`);
+  assert.equal(topicRegionPage.status, 200);
+  assert.ok(
+    (await topicRegionPage.text()).includes(`[DEMO] 日前规则 ${runId}`),
+    "Published topic value should render in the Shandong page HTML",
+  );
+
+  process.stdout.write(
+    "HTTP E2E passed: Auth → Signal publish → province-topic draft isolation → publish → immutable fields → public page\n",
+  );
 } finally {
+  if (provinceTopicId && adminDb) {
+    const { error: topicResetError } = await adminDb
+      .from("china_province_topic_records")
+      .update({
+        review_status: "pending_review",
+        published_at: null,
+        reviewer_id: null,
+        reviewed_at: null,
+      })
+      .eq("id", provinceTopicId);
+    assert.ifError(topicResetError);
+    const { error: topicDeleteError } = await adminDb
+      .from("china_province_topic_records")
+      .delete()
+      .eq("id", provinceTopicId);
+    assert.ifError(topicDeleteError);
+  }
   if (signalId && adminDb) {
     await adminDb.from("signals").delete().eq("id", signalId);
   }

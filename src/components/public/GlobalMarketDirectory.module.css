@@ -10,9 +10,9 @@
   --lime: #c8f04b;
   --lime-soft: rgba(200, 240, 75, 0.2);
   --green: #215c3a;
-  --display: "Bodoni 72", Didot, "Songti SC", serif;
-  --body: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
-  --mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Monaco, monospace;
+  --display: var(--gl-font-display, Arial, "STKaiti", "华文楷体", KaiTi, sans-serif);
+  --body: var(--gl-font-body, Arial, "STKaiti", "华文楷体", KaiTi, sans-serif);
+  --mono: var(--gl-font-mono, Arial, "STKaiti", "华文楷体", KaiTi, sans-serif);
   position: relative;
   isolation: isolate;
   width: 100%;
@@ -64,7 +64,7 @@
   content: "06";
   color: rgba(17, 20, 15, 0.045);
   font-family: var(--display);
-  font-size: clamp(160px, 20vw, 290px);
+  font-size: clamp(140px, 17vw, 240px);
   line-height: 0.88;
   letter-spacing: -0.09em;
   pointer-events: none;
@@ -87,7 +87,7 @@
   gap: 10px;
   color: var(--green);
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -105,10 +105,10 @@
   max-width: 820px;
   margin: 16px 0 23px;
   font-family: var(--display);
-  font-size: clamp(60px, 8vw, 110px);
+  font-size: clamp(50px, 6.5vw, 82px);
   font-weight: 500;
-  line-height: 0.84;
-  letter-spacing: -0.06em;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
 }
 
 .header h2 em {
@@ -133,7 +133,7 @@
   max-width: 720px;
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.85;
 }
 
@@ -153,7 +153,7 @@
   border-bottom: 1px solid var(--rule-strong);
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -176,16 +176,16 @@
 
 .summaryValue strong {
   font-family: var(--display);
-  font-size: clamp(47px, 6vw, 72px);
+  font-size: clamp(40px, 5vw, 58px);
   font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: -0.055em;
+  line-height: 1;
+  letter-spacing: -0.035em;
 }
 
 .summaryValue span {
   max-width: 120px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.4;
   text-align: right;
 }
@@ -208,7 +208,7 @@
 .summaryGrid dt {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.35;
 }
 
@@ -216,14 +216,14 @@
   margin: 7px 0 0;
   color: var(--ink);
   font-family: var(--display);
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1;
 }
 
 .summary > p {
   margin: 16px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.65;
 }
 
@@ -236,7 +236,7 @@
   border-bottom: 1px solid var(--rule-strong);
   color: var(--ink);
   background: #e9e5da;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -246,7 +246,7 @@
   color: var(--ink);
   background: var(--paper-bright);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -266,7 +266,7 @@
 .configurationCard > span {
   color: var(--green);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -275,7 +275,7 @@
 .sectionHeader h3 {
   margin: 8px 0 0;
   font-family: var(--display);
-  font-size: 34px;
+  font-size: 30px;
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.035em;
@@ -285,7 +285,7 @@
   margin: 0;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -393,7 +393,7 @@
   color: var(--ink);
   background: var(--paper-bright);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .cardStatus {
@@ -402,7 +402,7 @@
   gap: 6px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.04em;
 }
 
@@ -448,7 +448,7 @@
 .cardTitle > div > span {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -456,7 +456,7 @@
 .cardTitle h4 {
   margin: 8px 0 5px;
   font-family: var(--display);
-  font-size: clamp(36px, 4vw, 54px);
+  font-size: clamp(32px, 3.5vw, 44px);
   font-weight: 500;
   line-height: 0.92;
   letter-spacing: -0.045em;
@@ -466,7 +466,7 @@
 .cardTitle p {
   margin: 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .demoBadge {
@@ -476,7 +476,7 @@
   color: var(--ink);
   background: var(--paper-muted);
   font-family: var(--mono);
-  font-size: 6px;
+  font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -502,7 +502,7 @@
 .cardMetrics dt {
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
   text-transform: uppercase;
 }
 
@@ -510,7 +510,7 @@
   margin: 8px 0 0;
   color: var(--ink);
   font-family: var(--display);
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
 }
 
@@ -526,7 +526,7 @@
   padding-bottom: 10px;
   color: var(--faint);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
@@ -581,7 +581,7 @@
 }
 
 .countryList strong {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 650;
 }
 
@@ -589,7 +589,7 @@
   margin-top: 3px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .countryAvailability {
@@ -599,7 +599,7 @@
   color: var(--muted);
   background: var(--paper-bright);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
   text-align: center;
 }
 
@@ -635,7 +635,7 @@
   border-bottom: 1px solid var(--rule);
   color: var(--muted);
   background: var(--paper);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .cardFooter {
@@ -651,7 +651,7 @@
 .cardFooter > span {
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 9px;
 }
 
 .cardFooter > a {
@@ -662,7 +662,7 @@
   border-bottom: 1px solid var(--ink);
   color: var(--ink);
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
   text-decoration: none;
 }
@@ -686,7 +686,7 @@
   max-width: 980px;
   margin: 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   line-height: 1.7;
 }
 
@@ -721,7 +721,7 @@
 .configurationCard h2 {
   margin: 14px 0 15px;
   font-family: var(--display);
-  font-size: clamp(40px, 6vw, 60px);
+  font-size: clamp(34px, 5vw, 48px);
   font-weight: 500;
   line-height: 0.98;
   letter-spacing: -0.045em;
@@ -730,7 +730,7 @@
 .configurationCard p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
 }
 
@@ -764,7 +764,7 @@
   }
 
   .header h2 {
-    font-size: 59px;
+    font-size: 48px;
   }
 
   .configurationNotice {
@@ -795,7 +795,7 @@
   }
 
   .cardTitle h4 {
-    font-size: 43px;
+    font-size: 36px;
   }
 
   .boundaryNote {

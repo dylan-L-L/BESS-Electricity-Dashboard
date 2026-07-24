@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   SupabaseMarketMetricRepository,
+  SupabaseProvinceTopicRepository,
   SupabaseSignalRepository,
 } from "@/lib/repositories/supabase";
 
@@ -80,6 +81,22 @@ describe("descendant-scope repository boundary", () => {
       "in",
       "region_id",
       ["asia", "china", "shandong"],
+    ]);
+  });
+
+  it("keeps the published province-topic predicates when querying multiple regions", async () => {
+    const { calls, client } = recordingClient();
+
+    await new SupabaseProvinceTopicRepository(client).listPublic({
+      region_ids: ["china", "shandong"],
+    });
+
+    expect(calls).toContainEqual(["eq", "review_status", "published"]);
+    expect(calls).toContainEqual(["not", "published_at", "is", null]);
+    expect(calls).toContainEqual([
+      "in",
+      "region_id",
+      ["china", "shandong"],
     ]);
   });
 });

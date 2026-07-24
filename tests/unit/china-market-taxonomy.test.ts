@@ -5,8 +5,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   CHINA_MARKET_TOPICS,
+  CHINA_MARKET_TOPIC_IDS,
   type ChinaMarketTopicId,
-} from "@/components/public/china-market-data";
+} from "@/lib/china-market/taxonomy";
 
 const EXPECTED_TOPIC_IDS = [
   "trading-rules",
@@ -23,6 +24,7 @@ describe("China provincial market atlas taxonomy", () => {
     expect(CHINA_MARKET_TOPICS.map((topic) => topic.id)).toEqual(
       EXPECTED_TOPIC_IDS,
     );
+    expect(CHINA_MARKET_TOPIC_IDS).toEqual(EXPECTED_TOPIC_IDS);
     expect(new Set(CHINA_MARKET_TOPICS.map((topic) => topic.id)).size).toBe(7);
     expect(31 * CHINA_MARKET_TOPICS.length).toBe(217);
   });
@@ -65,7 +67,7 @@ describe("China provincial market atlas taxonomy", () => {
     const dataSource = readFileSync(
       fileURLToPath(
         new URL(
-          "../../src/components/public/china-market-data.ts",
+          "../../src/lib/china-market/taxonomy.ts",
           import.meta.url,
         ),
       ),
@@ -75,5 +77,24 @@ describe("China provincial market atlas taxonomy", () => {
     expect(dataSource).not.toContain("CHINA_PROVINCES");
     expect(dataSource).not.toContain("tibet");
     expect(dataSource).not.toContain("xizang");
+  });
+
+  it("keeps the database topic/field allow-list aligned with the shared taxonomy", () => {
+    const migration = readFileSync(
+      fileURLToPath(
+        new URL(
+          "../../supabase/migrations/202607240001_china_province_topic_module.sql",
+          import.meta.url,
+        ),
+      ),
+      "utf8",
+    );
+
+    for (const topic of CHINA_MARKET_TOPICS) {
+      expect(migration).toContain(`'${topic.id}'`);
+      for (const field of topic.fields) {
+        expect(migration).toContain(`'${field.key}'`);
+      }
+    }
   });
 });

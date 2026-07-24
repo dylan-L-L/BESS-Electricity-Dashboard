@@ -75,14 +75,14 @@
 .configurationCard > span {
   color: var(--atlas-amber);
   font-family: var(--atlas-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.12em;
 }
 
 .configurationCard h2 {
   margin: 12px 0;
   font-family: var(--atlas-display);
-  font-size: clamp(34px, 5vw, 58px);
+  font-size: clamp(30px, 4.5vw, 48px);
   font-weight: 500;
 }
 
@@ -123,7 +123,7 @@
   content: "31";
   color: rgba(25, 40, 30, 0.045);
   font-family: var(--atlas-display);
-  font-size: clamp(150px, 19vw, 270px);
+  font-size: clamp(130px, 16vw, 220px);
   line-height: 0.9;
   letter-spacing: -0.08em;
   pointer-events: none;
@@ -146,7 +146,7 @@
   gap: 10px;
   color: var(--atlas-signal);
   font-family: var(--atlas-mono);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -163,10 +163,10 @@
   max-width: 800px;
   margin: 15px 0 20px;
   font-family: var(--atlas-display);
-  font-size: clamp(50px, 6vw, 82px);
+  font-size: clamp(42px, 5vw, 66px);
   font-weight: 500;
-  line-height: 0.88;
-  letter-spacing: -0.055em;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
 }
 
 .hero h2 em {
@@ -178,7 +178,7 @@
   max-width: 690px;
   margin: 0;
   color: #536058;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.8;
 }
 
@@ -193,7 +193,7 @@
   color: #77551b;
   background: #fffaf0;
   font-family: var(--atlas-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -233,7 +233,7 @@
   border-bottom: 1px solid var(--atlas-rule);
   color: #667168;
   font-family: var(--atlas-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.1em;
 }
 
@@ -252,7 +252,7 @@
 
 .coverageValue strong {
   font-family: var(--atlas-display);
-  font-size: clamp(50px, 6vw, 72px);
+  font-size: clamp(40px, 5vw, 58px);
   font-weight: 400;
   line-height: 0.9;
   letter-spacing: -0.055em;
@@ -260,7 +260,7 @@
 
 .coverageValue span {
   color: #68736b;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .coverageTrack,
@@ -307,7 +307,7 @@
 .coverageMeta dt {
   color: #667168;
   font-family: var(--atlas-mono);
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1.35;
 }
 
@@ -315,13 +315,13 @@
   margin: 5px 0 0;
   color: var(--atlas-paper);
   font-family: var(--atlas-mono);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .coverageRule {
   margin: 15px 0 0;
   color: #657068;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -348,14 +348,14 @@
 .methodology > span {
   color: #647067;
   font-family: var(--atlas-mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .railLabel strong {
   color: var(--atlas-paper);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .topicTabs {
@@ -413,7 +413,7 @@
 .topicTab > span {
   color: #5d655f;
   font-family: var(--atlas-mono);
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .topicTabActive > span {
@@ -421,7 +421,7 @@
 }
 
 .topicTab > strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -441,7 +441,7 @@
 .topicIntro h3 {
   margin: 6px 0 0;
   font-family: var(--atlas-display);
-  font-size: 27px;
+  font-size: 24px;
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -453,7 +453,7 @@
   padding-left: 24px;
   border-left: 1px solid var(--atlas-rule-strong);
   color: #556159;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
 }
 
@@ -486,7 +486,7 @@
 .panelHeader h3 {
   margin: 6px 0 0;
   font-family: var(--atlas-display);
-  font-size: 29px;
+  font-size: 26px;
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -495,7 +495,7 @@
 .resultCount {
   color: #667168;
   font-family: var(--atlas-mono);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .searchBox {
@@ -610,7 +610,7 @@
   border-radius: 50%;
   color: #5c685f;
   font-family: var(--atlas-display);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .provinceButtonActive .provinceShort {
@@ -620,7 +620,7 @@
 
 .provinceName {
   min-width: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 550;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -635,8 +635,14 @@
   background: #9aa39c;
 }
 
-.provinceButton[data-state="generic_records"] > i,
-.statusLegend [data-state="generic_records"] i {
+.provinceButton[data-state="complete"] > i,
+.statusLegend [data-state="complete"] i {
+  background: var(--atlas-signal);
+  box-shadow: 0 0 0 3px rgba(31, 107, 76, 0.1);
+}
+
+.provinceButton[data-state="partial"] > i,
+.statusLegend [data-state="partial"] i {
   background: var(--atlas-amber);
   box-shadow: none;
 }
@@ -655,7 +661,7 @@
   border-radius: 8px;
   color: #657068;
   background: #ffffff;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .statusLegend {
@@ -673,7 +679,7 @@
   gap: 6px;
   color: #657068;
   font-family: var(--atlas-mono);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .detailPanel {
@@ -703,7 +709,7 @@
   color: var(--atlas-signal);
   background: var(--atlas-signal-soft);
   font-family: var(--atlas-display);
-  font-size: 25px;
+  font-size: 23px;
 }
 
 .detailTitle {
@@ -713,7 +719,7 @@
 .detailTitle h3 {
   margin: 5px 0 4px;
   font-family: var(--atlas-display);
-  font-size: 33px;
+  font-size: 28px;
   font-weight: 500;
   line-height: 0.95;
   letter-spacing: -0.035em;
@@ -722,7 +728,7 @@
 .detailTitle p {
   margin: 0;
   color: #657068;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .detailStatus,
@@ -735,7 +741,7 @@
   border-radius: 99px;
   color: #667168;
   font-family: var(--atlas-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
@@ -753,6 +759,44 @@
 .fieldTopline strong[data-state="no_topic_data"] {
   color: #667168;
   border-color: var(--atlas-rule);
+}
+
+.detailStatus[data-state="complete"],
+.fieldTopline strong[data-state="available"] {
+  color: var(--atlas-signal);
+  border-color: #b9d1c1;
+  background: var(--atlas-signal-soft);
+}
+
+.detailStatus[data-state="partial"],
+.fieldTopline strong[data-state="not_covered"],
+.fieldTopline strong[data-state="not_published"],
+.fieldTopline strong[data-state="stale"] {
+  color: var(--atlas-amber);
+  border-color: #decba6;
+  background: #fffaf0;
+}
+
+.fieldTopline strong[data-state="not_applicable"] {
+  color: #657068;
+  background: #f5f6f5;
+}
+
+.fieldTopline strong[data-state="conflicting"] {
+  color: var(--atlas-coral);
+  border-color: #dfbbb4;
+  background: #fff4f1;
+}
+
+.demoNotice {
+  margin-top: 18px;
+  padding: 9px 12px;
+  border: 1px solid #c9d78b;
+  color: #4b5b17;
+  background: #f6fadf;
+  font-family: var(--atlas-mono);
+  font-size: 8px;
+  letter-spacing: 0.06em;
 }
 
 .fieldGrid {
@@ -799,6 +843,16 @@
   box-shadow: inset 2px 0 #d9dfda;
 }
 
+.fieldCard[data-state="available"] {
+  border-color: #cadbd0;
+  box-shadow: inset 2px 0 var(--atlas-signal), 0 8px 24px rgba(30, 48, 37, 0.05);
+}
+
+.fieldCard[data-state="conflicting"] {
+  border-color: #e1c3bd;
+  box-shadow: inset 2px 0 var(--atlas-coral);
+}
+
 .fieldTopline {
   display: flex;
   align-items: center;
@@ -809,7 +863,7 @@
 .fieldTopline > span {
   color: #657068;
   font-family: var(--atlas-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -817,7 +871,7 @@
 .fieldCard h4 {
   margin: 15px 0 7px;
   font-family: var(--atlas-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: -0.025em;
@@ -826,7 +880,7 @@
 .fieldCard > p {
   margin: 0;
   color: #566259;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.65;
 }
 
@@ -842,7 +896,7 @@
 .fieldValue strong {
   color: var(--atlas-paper);
   font-family: var(--atlas-display);
-  font-size: clamp(30px, 3vw, 43px);
+  font-size: clamp(27px, 2.7vw, 37px);
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -853,10 +907,43 @@
   color: #78827b;
 }
 
-.fieldValue span {
+.fieldValue span,
+.fieldValue small {
+  color: #667168;
+  font-family: var(--atlas-mono);
+  font-size: 11px;
+}
+
+.fieldEvidence {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid var(--atlas-rule);
+  background: #fafbfa;
+}
+
+.fieldEvidence div {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.fieldEvidence dt {
   color: #667168;
   font-family: var(--atlas-mono);
   font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fieldEvidence dd {
+  min-width: 0;
+  margin: 0;
+  color: #4d5850;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .sourceRow {
@@ -868,7 +955,7 @@
   border-top: 1px solid var(--atlas-rule);
   color: #68736b;
   font-family: var(--atlas-mono);
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .sourceRow a {
@@ -895,7 +982,7 @@
   border-left: 2px solid var(--atlas-blue);
   color: #52647b;
   background: #f3f6fa;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.55;
 }
 
@@ -918,7 +1005,7 @@
 .detailFooter > div span {
   color: #657068;
   font-family: var(--atlas-mono);
-  font-size: 8px;
+  font-size: 10px;
   letter-spacing: 0.08em;
 }
 
@@ -926,14 +1013,28 @@
   margin-top: 6px;
   color: var(--atlas-paper);
   font-family: var(--atlas-mono);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .detailFooter > p {
   margin: 0;
   color: #5d6860;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.65;
+}
+
+.recordSourceLink {
+  grid-column: 2;
+  justify-self: start;
+  color: var(--atlas-signal);
+  font-family: var(--atlas-mono);
+  font-size: 10px;
+  text-decoration: none;
+}
+
+.recordSourceLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .noProvinceState {
@@ -947,7 +1048,7 @@
 
 .noProvinceState strong {
   font-family: var(--atlas-display);
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 500;
 }
 
@@ -964,7 +1065,7 @@
   max-width: 980px;
   margin: 0;
   color: #5d6860;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.65;
 }
 
@@ -1060,7 +1161,7 @@
   }
 
   .hero h2 {
-    font-size: 51px;
+    font-size: 40px;
   }
 
   .coverageMeta,
@@ -1101,6 +1202,10 @@
   .methodology {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+
+  .recordSourceLink {
+    grid-column: auto;
   }
 }
 
