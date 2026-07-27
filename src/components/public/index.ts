@@ -18,6 +18,8 @@ export type {
 } from "./Dashboard";
 export { SignalDetail } from "./SignalDetail";
 export type { SignalDetailProps } from "./SignalDetail";
+export { LanguageSwitcher } from "./LanguageSwitcher";
+export type { LanguageSwitcherProps } from "./LanguageSwitcher";
 export { ChinaProvinceMarketAtlas } from "./ChinaProvinceMarketAtlas";
 export type { ChinaProvinceMarketAtlasProps } from "./ChinaProvinceMarketAtlas";
 export { CHINA_MARKET_TOPICS } from "./china-market-data";

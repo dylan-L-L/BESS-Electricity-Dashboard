@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SignalDetail } from "@/components/public";
 import { SetupRequired } from "@/components/system/setup-required";
 import { getPublishedSignalDetail } from "@/lib/data/public";
+import { getRequestDisplayLocale } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export default async function SignalPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, locale] = await Promise.all([params, getRequestDisplayLocale()]);
   const { configured, signal, region } = await getPublishedSignalDetail(id);
   if (!configured) return <SetupRequired />;
   if (!signal) notFound();
@@ -22,6 +23,7 @@ export default async function SignalPage({
       region={region}
       backHref={region && region.region_type !== "global" ? `/regions/${region.slug}` : "/"}
       regionHref={region && region.region_type !== "global" ? `/regions/${region.slug}` : "/"}
+      locale={locale}
     />
   );
 }

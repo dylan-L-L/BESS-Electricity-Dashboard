@@ -183,11 +183,13 @@ describe("display semantics", () => {
       publicStatusLabel("filed"),
       publicStatusLabel("approved"),
       publicStatusLabel("effective"),
-    ]).toEqual([
-      "Draft / 草案",
-      "Filed / 已提交",
-      "Approved / 已批准",
-      "Effective / 已生效",
-    ]);
+    ]).toEqual(["草案", "已提交", "已批准", "已生效"]);
+
+    expect([
+      publicStatusLabel("draft", "en"),
+      publicStatusLabel("filed", "en"),
+      publicStatusLabel("approved", "en"),
+      publicStatusLabel("effective", "en"),
+    ]).toEqual(["Draft", "Filed", "Approved", "Effective"]);
   });
 });

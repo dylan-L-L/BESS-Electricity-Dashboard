@@ -1,12 +1,15 @@
 import type { Region, Signal } from "@/lib/types";
 import Link from "next/link";
 
+import { type DisplayLocale, getMessages, regionDisplayName } from "@/lib/i18n";
+
 import {
   formatDate,
   formatOptionalText,
   normalizedStatusLabel,
 } from "./formatters";
 import { isPublishedSignal, StatusPill } from "./Dashboard";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 type DemoAware = { is_demo?: boolean };
 
@@ -15,37 +18,53 @@ export interface SignalDetailProps {
   region?: Region | null;
   backHref?: string;
   regionHref?: string;
+  locale?: DisplayLocale;
 }
 
-export function SignalDetail({ signal, region, backHref = "/", regionHref }: SignalDetailProps) {
+export function SignalDetail({
+  signal,
+  region,
+  backHref = "/",
+  regionHref,
+  locale = "zh-CN",
+}: SignalDetailProps) {
   if (!isPublishedSignal(signal)) {
     return null;
   }
 
+  const copy = getMessages(locale);
+  const detail = copy.signalDetail;
   const isDemo = Boolean((signal as Signal & DemoAware).is_demo);
-  const regionName = region?.name_zh || region?.name_en || region?.code || "未指定地区";
+  const regionName = regionDisplayName(
+    region,
+    locale,
+    copy.unspecifiedRegion,
+  );
 
   return (
     <main className="gl-detail-page">
       {isDemo ? (
         <div className="gl-demo-ribbon gl-demo-ribbon-static" role="note">
-          <span>Demo data</span> 此记录为演示内容，不代表真实政策或市场结论
+          <span>Demo data</span> {detail.demoRibbon}
         </div>
       ) : null}
 
       <header className="gl-detail-topbar">
-        <Link className="gl-detail-brand" href="/" aria-label="Grid Ledger 首页">
+        <Link className="gl-detail-brand" href="/" aria-label={detail.homeAria}>
           <span className="gl-brand-mark" aria-hidden="true" />
           <strong>Grid Ledger</strong>
         </Link>
-        <a className="gl-back-link" href={backHref}>
-          ← 返回看板
-        </a>
+        <div className="gl-detail-actions">
+          <LanguageSwitcher locale={locale} />
+          <a className="gl-back-link" href={backHref}>
+            {detail.back}
+          </a>
+        </div>
       </header>
 
       <article className="gl-dossier">
         <header className="gl-dossier-header">
-          <div className="gl-eyebrow">Intelligence dossier / 情报档案</div>
+          <div className="gl-eyebrow">{detail.eyebrow}</div>
           <div className="gl-detail-region">
             {regionHref ? <a href={regionHref}>{regionName}</a> : regionName}
             <span>·</span>
@@ -53,56 +72,57 @@ export function SignalDetail({ signal, region, backHref = "/", regionHref }: Sig
             {isDemo ? <span className="gl-demo-pill">Demo</span> : null}
           </div>
           <h1>{signal.title}</h1>
-          <StatusPill status={signal.normalized_status} />
+          <StatusPill status={signal.normalized_status} locale={locale} />
           <p className="gl-dossier-summary">{signal.summary}</p>
         </header>
 
-        <section className="gl-drawer-grid" aria-label="记录信息">
+        <section className="gl-drawer-grid" aria-label={detail.recordInfo}>
           <div className="gl-drawer-stat">
-            <span>Event status / 规范状态</span>
-            <strong>{normalizedStatusLabel(signal.normalized_status)}</strong>
+            <span>{detail.eventStatus}</span>
+            <strong>{normalizedStatusLabel(signal.normalized_status, locale)}</strong>
           </div>
           <div className="gl-drawer-stat">
-            <span>Original status / 原始状态</span>
+            <span>{detail.originalStatus}</span>
             <strong>{formatOptionalText(signal.original_status)}</strong>
           </div>
           <div className="gl-drawer-stat">
-            <span>Event date / 事件日期</span>
-            <strong>{formatDate(signal.event_date)}</strong>
+            <span>{detail.eventDate}</span>
+            <strong>{formatDate(signal.event_date, locale)}</strong>
           </div>
           <div className="gl-drawer-stat">
-            <span>Effective date / 生效日期</span>
-            <strong>{formatDate(signal.effective_date)}</strong>
+            <span>{detail.effectiveDate}</span>
+            <strong>{formatDate(signal.effective_date, locale)}</strong>
           </div>
           <div className="gl-drawer-stat">
-            <span>Impact channel / 影响渠道</span>
+            <span>{detail.impactChannel}</span>
             <strong>{formatOptionalText(signal.impact_channel)}</strong>
           </div>
           <div className="gl-drawer-stat">
-            <span>Direction · level / 方向与级别</span>
+            <span>{detail.directionLevel}</span>
             <strong>
-              {formatOptionalText(signal.impact_direction)} · {formatOptionalText(signal.impact_level)}
+              {formatOptionalText(signal.impact_direction)} ·{" "}
+              {formatOptionalText(signal.impact_level)}
             </strong>
           </div>
         </section>
 
         <section className="gl-drawer-section">
-          <h2>Human review / 人工核验</h2>
+          <h2>{detail.humanReview}</h2>
           <p>{formatOptionalText(signal.reviewer_note)}</p>
           <dl className="gl-review-meta">
             <div>
-              <dt>Review status</dt>
-              <dd>Published / 已发布</dd>
+              <dt>{detail.reviewStatus}</dt>
+              <dd>{detail.reviewStatusValue}</dd>
             </div>
             <div>
-              <dt>Published at</dt>
-              <dd>{formatDate(signal.published_at)}</dd>
+              <dt>{detail.publishedAt}</dt>
+              <dd>{formatDate(signal.published_at, locale)}</dd>
             </div>
           </dl>
         </section>
 
         <section className="gl-drawer-section">
-          <h2>Evidence trail / 原始来源</h2>
+          <h2>{detail.evidence}</h2>
           <a
             className="gl-source-card"
             href={signal.source_url}
@@ -113,14 +133,16 @@ export function SignalDetail({ signal, region, backHref = "/", regionHref }: Sig
               <strong>{formatOptionalText(signal.source_name)}</strong>
               <small>{signal.source_url}</small>
             </span>
-            <em>OPEN ORIGINAL ↗</em>
+            <em>{detail.openOriginal}</em>
           </a>
         </section>
 
         <section className="gl-drawer-section gl-research-boundary">
-          <h2>Research boundary / 状态边界</h2>
+          <h2>{detail.boundary}</h2>
           <p>
-            当前记录按“{normalizedStatusLabel(signal.normalized_status)}”展示。已提交、已批准、草案与已生效是不同状态，页面不会自动推断或升级其法律效力。
+            {detail.boundaryBody(
+              normalizedStatusLabel(signal.normalized_status, locale),
+            )}
           </p>
         </section>
       </article>

@@ -3,10 +3,15 @@
 import { useMemo, useState } from "react";
 
 import {
-  PROVINCE_TOPIC_FIELD_COVERAGE_LABELS,
-  PROVINCE_TOPIC_LEGAL_STATUS_LABELS,
-  PROVINCE_TOPIC_OPERATIONAL_STATUS_LABELS,
-} from "@/lib/china-market/status";
+  chinaTopicCopy,
+  type DisplayLocale,
+  fieldCoverageLabel,
+  getMessages,
+  legalStatusLabel,
+  localeTag,
+  operationalStatusLabel,
+  regionDisplayName,
+} from "@/lib/i18n";
 import type {
   MarketMetric,
   ProvinceTopicField,
@@ -29,12 +34,8 @@ function classNames(
   return values.filter(Boolean).join(" ");
 }
 
-function regionLabel(region: Region): string {
-  return region.name_zh || region.name_en || region.code || region.slug;
-}
-
-function regionMonogram(region: Region): string {
-  return regionLabel(region).slice(0, 1);
+function regionMonogram(region: Region, locale: DisplayLocale): string {
+  return regionDisplayName(region, locale).slice(0, 1);
 }
 
 function findChinaRegion(
@@ -120,16 +121,47 @@ function fieldForKey(
   return record?.fields.find((field) => field.field_key === fieldKey);
 }
 
-function formatDate(value: string | null | undefined) {
+function formatDate(value: string | null | undefined, locale: DisplayLocale) {
   if (!value) return "—";
   const date = new Date(`${value.slice(0, 10)}T00:00:00Z`);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("zh-CN", {
+  return new Intl.DateTimeFormat(localeTag(locale), {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     timeZone: "UTC",
   }).format(date);
+}
+
+function localizedTopic(topic: TopicDefinition, locale: DisplayLocale) {
+  const enCopy = chinaTopicCopy(topic.id, locale);
+  if (!enCopy) {
+    return {
+      shortLabel: topic.shortLabel,
+      title: topic.title,
+      description: topic.description,
+      fields: topic.fields.map((field) => ({
+        key: field.key,
+        label: field.label,
+        description: field.description,
+        valueKind: field.valueKind,
+      })),
+    };
+  }
+  return {
+    shortLabel: enCopy.shortLabel,
+    title: enCopy.title,
+    description: enCopy.description,
+    fields: topic.fields.map((field) => {
+      const translated = enCopy.fields[field.key];
+      return {
+        key: field.key,
+        label: translated?.label ?? field.label,
+        description: translated?.description ?? field.description,
+        valueKind: field.valueKind,
+      };
+    }),
+  };
 }
 
 function recordCoverageState(
@@ -155,6 +187,7 @@ export interface ChinaProvinceMarketAtlasProps {
   initialProvinceId?: string;
   initialTopicId?: ChinaMarketTopicId;
   className?: string;
+  locale?: DisplayLocale;
   onProvinceChange?: (provinceId: string) => void;
   onTopicChange?: (topicId: ChinaMarketTopicId) => void;
 }
@@ -173,9 +206,12 @@ export function ChinaProvinceMarketAtlas({
   initialProvinceId,
   initialTopicId = "trading-rules",
   className,
+  locale = "zh-CN",
   onProvinceChange,
   onTopicChange,
 }: ChinaProvinceMarketAtlasProps) {
+  const copy = getMessages(locale).chinaAtlas;
+  const regionLabel = (region: Region) => regionDisplayName(region, locale);
   const chinaRegion = findChinaRegion(regions, chinaRegionId);
   const provinces = useMemo(
     () =>
@@ -187,10 +223,13 @@ export function ChinaProvinceMarketAtlas({
                 region.parent_id === chinaRegion.id,
             )
             .sort((left, right) =>
-              regionLabel(left).localeCompare(regionLabel(right), "zh-CN"),
+              regionDisplayName(left, locale).localeCompare(
+                regionDisplayName(right, locale),
+                localeTag(locale),
+              ),
             )
         : [],
-    [chinaRegion, regions],
+    [chinaRegion, locale, regions],
   );
   const publishedSignals = useMemo(
     () => publishedSignalsOnly(signals),
@@ -229,23 +268,24 @@ export function ChinaProvinceMarketAtlas({
     useState<ChinaMarketTopicId>(initialTopicId);
   const [query, setQuery] = useState("");
 
-  const activeTopic =
+  const activeTopicBase =
     CHINA_MARKET_TOPICS.find((topic) => topic.id === activeTopicId) ??
     CHINA_MARKET_TOPICS[0];
+  const activeTopic = localizedTopic(activeTopicBase, locale);
   const activeProvince =
     provinces.find((province) => province.id === activeProvinceId) ??
     provinces.find((province) => province.slug === "shandong") ??
     provinces[0];
   const activeRecord = activeProvince
-    ? recordsByCell.get(recordCellKey(activeProvince.id, activeTopic.id))
+    ? recordsByCell.get(recordCellKey(activeProvince.id, activeTopicBase.id))
     : undefined;
 
-  const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
+  const normalizedQuery = query.trim().toLocaleLowerCase(localeTag(locale));
   const filteredProvinces = provinces.filter((province) =>
     [province.name_zh, province.name_en, province.code, province.slug]
       .filter(Boolean)
       .join(" ")
-      .toLocaleLowerCase("zh-CN")
+      .toLocaleLowerCase(localeTag(locale))
       .includes(normalizedQuery),
   );
 
@@ -257,7 +297,7 @@ export function ChinaProvinceMarketAtlas({
     : [];
   const activeTopicRecords = provinces
     .map((province) =>
-      recordsByCell.get(recordCellKey(province.id, activeTopic.id)),
+      recordsByCell.get(recordCellKey(province.id, activeTopicBase.id)),
     )
     .filter(
       (
@@ -323,11 +363,8 @@ export function ChinaProvinceMarketAtlas({
       >
         <div className={styles.configurationCard}>
           <span>REGION CONFIGURATION REQUIRED</span>
-          <h2 id="china-market-atlas-title">未找到中国地区记录</h2>
-          <p>
-            请传入 regions 表数据并提供中国 country
-            记录；组件不会在前端创建或猜测省份。
-          </p>
+          <h2 id="china-market-atlas-title">{copy.configTitle}</h2>
+          <p>{copy.configBody}</p>
         </div>
       </section>
     );
@@ -341,21 +378,17 @@ export function ChinaProvinceMarketAtlas({
     >
       <header className={styles.hero}>
         <div className={styles.heroCopy}>
-          <div className={styles.eyebrow}>
-            China provincial intelligence / 中国省级台账
-          </div>
+          <div className={styles.eyebrow}>{copy.eyebrow}</div>
           <h2 id="china-market-atlas-title">
-            {provinces.length || "—"} 省级地区
+            {copy.titleProvinces(provinces.length || "—")}
             <br />
             <em>
-              电力市场
+              {copy.titleEm1}
               <br />
-              专题矩阵
+              {copy.titleEm2}
             </em>
           </h2>
-          <p>
-            七类专题按数据库中的省级专题记录分别展示。每个具体值都保留覆盖状态、原始单位和字段级证据定位。
-          </p>
+          <p>{copy.description}</p>
           <div
             className={styles.boundaryFlag}
             data-complete={hasExpectedProvinceRegistry}
@@ -367,15 +400,18 @@ export function ChinaProvinceMarketAtlas({
           </div>
         </div>
 
-        <aside className={styles.coverageCard} aria-label="已发布专题数据覆盖">
+        <aside className={styles.coverageCard} aria-label={copy.coverageLabel}>
           <div className={styles.coverageTopline}>
             <span>PUBLISHED TOPIC COVERAGE</span>
-            <strong>{activeTopic.index} / 07</strong>
+            <strong>{activeTopicBase.index} / 07</strong>
           </div>
           <div className={styles.coverageValue}>
             <strong>{topicProvinceCoverage}%</strong>
             <span>
-              {activeTopicRecords.length} / {provinces.length} 省份有发布记录
+              {copy.provincesWithRecords(
+                activeTopicRecords.length,
+                provinces.length,
+              )}
             </span>
           </div>
           <div className={styles.coverageTrack} aria-hidden="true">
@@ -384,36 +420,34 @@ export function ChinaProvinceMarketAtlas({
           <dl className={styles.coverageMeta}>
             <div>
               <dt>Topic records</dt>
-              <dd>{activeTopicRecords.length} 个发布单元</dd>
+              <dd>{copy.topicRecords(activeTopicRecords.length)}</dd>
             </div>
             <div>
               <dt>Available fields</dt>
-              <dd>{activeTopicAvailableFields} 个有值字段</dd>
+              <dd>{copy.availableFields(activeTopicAvailableFields)}</dd>
             </div>
             <div>
               <dt>Province rows</dt>
-              <dd>{provinces.length} 条地区记录</dd>
+              <dd>{copy.provinceRows(provinces.length)}</dd>
             </div>
           </dl>
-          <p className={styles.coverageRule}>
-            覆盖率按当前专题有无已发布记录计算；“未公布”“不适用”“来源冲突”仍作为明确覆盖状态展示，不会转成
-            0。
-          </p>
+          <p className={styles.coverageRule}>{copy.coverageRule}</p>
         </aside>
       </header>
 
       <div className={styles.topicRail}>
         <div className={styles.railLabel}>
-          <span>Topic ledger</span>
-          <strong>七类专题</strong>
+          <span>{copy.topicLedger}</span>
+          <strong>{copy.sevenTopics}</strong>
         </div>
         <div
           className={styles.topicTabs}
           role="tablist"
-          aria-label="中国电力市场专题"
+          aria-label={copy.topicTabs}
         >
           {CHINA_MARKET_TOPICS.map((topic, index) => {
-            const selected = topic.id === activeTopic.id;
+            const selected = topic.id === activeTopicBase.id;
+            const topicCopy = localizedTopic(topic, locale);
             return (
               <button
                 type="button"
@@ -431,7 +465,7 @@ export function ChinaProvinceMarketAtlas({
                 key={topic.id}
               >
                 <span>{topic.index}</span>
-                <strong>{topic.shortLabel}</strong>
+                <strong>{topicCopy.shortLabel}</strong>
               </button>
             );
           })}
@@ -442,10 +476,10 @@ export function ChinaProvinceMarketAtlas({
         className={styles.topicIntro}
         role="tabpanel"
         id="china-topic-panel"
-        aria-labelledby={`china-topic-${activeTopic.id}`}
+        aria-labelledby={`china-topic-${activeTopicBase.id}`}
       >
         <div>
-          <span>{activeTopic.index} / TOPIC</span>
+          <span>{activeTopicBase.index} / TOPIC</span>
           <h3>{activeTopic.title}</h3>
         </div>
         <p>{activeTopic.description}</p>
@@ -458,8 +492,8 @@ export function ChinaProvinceMarketAtlas({
         >
           <div className={styles.panelHeader}>
             <div>
-              <span>Province directory</span>
-              <h3 id="province-directory-title">省份索引</h3>
+              <span>{copy.provinceDirectory}</span>
+              <h3 id="province-directory-title">{copy.provinceIndex}</h3>
             </div>
             <span className={styles.resultCount} aria-live="polite">
               {filteredProvinces.length} / {provinces.length}
@@ -467,7 +501,7 @@ export function ChinaProvinceMarketAtlas({
           </div>
 
           <label className={styles.searchBox}>
-            <span className={styles.srOnly}>搜索省份</span>
+            <span className={styles.srOnly}>{copy.searchLabel}</span>
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -481,14 +515,14 @@ export function ChinaProvinceMarketAtlas({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="搜索省份、代码或 slug…"
+              placeholder={copy.searchPlaceholder}
               autoComplete="off"
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                aria-label="清除省份搜索"
+                aria-label={copy.clearSearch}
               >
                 ×
               </button>
@@ -496,11 +530,11 @@ export function ChinaProvinceMarketAtlas({
           </label>
 
           {filteredProvinces.length ? (
-            <div className={styles.provinceGrid} aria-label="中国省级地区">
+            <div className={styles.provinceGrid} aria-label={copy.provinceList}>
               {filteredProvinces.map((province) => {
                 const selected = province.id === activeProvince?.id;
                 const record = recordsByCell.get(
-                  recordCellKey(province.id, activeTopic.id),
+                  recordCellKey(province.id, activeTopicBase.id),
                 );
                 const availabilityState = recordCoverageState(
                   record,
@@ -508,8 +542,8 @@ export function ChinaProvinceMarketAtlas({
                 );
                 const fieldCount = availableFieldCount(record);
                 const statusText = record
-                  ? `${fieldCount}/${activeTopic.fields.length} 个字段有已核实值`
-                  : "暂无已发布专题记录";
+                  ? copy.fieldStatus(fieldCount, activeTopic.fields.length)
+                  : copy.noTopicRecord;
                 return (
                   <button
                     type="button"
@@ -519,12 +553,12 @@ export function ChinaProvinceMarketAtlas({
                     )}
                     data-state={availabilityState}
                     aria-pressed={selected}
-                    aria-label={`${regionLabel(province)}，${statusText}`}
+                    aria-label={`${regionLabel(province)}, ${statusText}`}
                     onClick={() => selectProvince(province)}
                     key={province.id}
                   >
                     <span className={styles.provinceShort}>
-                      {regionMonogram(province)}
+                      {regionMonogram(province, locale)}
                     </span>
                     <span className={styles.provinceName}>
                       {regionLabel(province)}
@@ -535,18 +569,18 @@ export function ChinaProvinceMarketAtlas({
               })}
             </div>
           ) : (
-            <div className={styles.noResults}>没有匹配的省级地区。</div>
+            <div className={styles.noResults}>{copy.noMatchingProvinces}</div>
           )}
 
-          <div className={styles.statusLegend} aria-label="专题覆盖状态图例">
+          <div className={styles.statusLegend} aria-label={copy.coverageLegend}>
             <span data-state="complete">
-              <i aria-hidden="true" /> 字段完整
+              <i aria-hidden="true" /> {copy.legendComplete}
             </span>
             <span data-state="partial">
-              <i aria-hidden="true" /> 已发布但不完整
+              <i aria-hidden="true" /> {copy.legendPartial}
             </span>
             <span data-state="no_topic_data">
-              <i aria-hidden="true" /> 暂无发布记录
+              <i aria-hidden="true" /> {copy.legendNone}
             </span>
           </div>
         </section>
@@ -555,12 +589,12 @@ export function ChinaProvinceMarketAtlas({
           <article className={styles.detailPanel} aria-live="polite">
             <header className={styles.detailHeader}>
               <div className={styles.provinceMonogram} aria-hidden="true">
-                {regionMonogram(activeProvince)}
+                {regionMonogram(activeProvince, locale)}
               </div>
               <div className={styles.detailTitle}>
                 <span>
                   {activeProvince.code || activeProvince.slug} /{" "}
-                  {activeTopic.index}
+                  {activeTopicBase.index}
                 </span>
                 <h3>{regionLabel(activeProvince)}</h3>
                 <p>{activeTopic.title}</p>
@@ -571,15 +605,18 @@ export function ChinaProvinceMarketAtlas({
               >
                 {activeRecord
                   ? activeCoverageState === "complete"
-                    ? "字段完整"
-                    : `${availableFieldCount(activeRecord)} / ${activeTopic.fields.length} 有值`
-                  : "暂无已发布专题数据"}
+                    ? copy.legendComplete
+                    : copy.fieldStatus(
+                        availableFieldCount(activeRecord),
+                        activeTopic.fields.length,
+                      )
+                  : copy.noTopicRecord}
               </span>
             </header>
 
             {activeRecord?.is_demo ? (
               <div className={styles.demoNotice}>
-                DEMO · 此专题记录仅用于工程验证，不代表真实市场结论
+                DEMO · {getMessages(locale).demoRibbon}
               </div>
             ) : null}
 
@@ -588,10 +625,8 @@ export function ChinaProvinceMarketAtlas({
                 const field = fieldForKey(activeRecord, definition.key);
                 const state = field?.coverage_status ?? "no_topic_data";
                 const statusLabel = field
-                  ? PROVINCE_TOPIC_FIELD_COVERAGE_LABELS[
-                      field.coverage_status
-                    ]
-                  : "暂无已发布数据";
+                  ? fieldCoverageLabel(field.coverage_status, locale)
+                  : copy.noTopicRecord;
                 const hasValue = Boolean(field?.value_text?.trim());
                 return (
                   <section
@@ -618,13 +653,13 @@ export function ChinaProvinceMarketAtlas({
                       <dl className={styles.fieldEvidence}>
                         {field.applicability ? (
                           <div>
-                            <dt>适用范围</dt>
+                            <dt>{copy.source}</dt>
                             <dd>{field.applicability}</dd>
                           </div>
                         ) : null}
                         {field.source_locator ? (
                           <div>
-                            <dt>证据定位</dt>
+                            <dt>{copy.evidence}</dt>
                             <dd>{field.source_locator}</dd>
                           </div>
                         ) : null}
@@ -637,12 +672,12 @@ export function ChinaProvinceMarketAtlas({
                           target="_blank"
                           rel="noreferrer"
                         >
-                          {field.source_name || "查看字段来源"} ↗
+                          {field.source_name || copy.source} ↗
                         </a>
                       ) : (
-                        <span>尚无字段级公开来源</span>
+                        <span>{copy.noPublishedFields}</span>
                       )}
-                      <time>{formatDate(activeRecord?.as_of_date)}</time>
+                      <time>{formatDate(activeRecord?.as_of_date, locale)}</time>
                     </div>
                   </section>
                 );
@@ -653,24 +688,19 @@ export function ChinaProvinceMarketAtlas({
               {activeRecord ? (
                 <>
                   <div>
-                    <span>当前发布记录</span>
+                    <span>{copy.topicUnit}</span>
                     <strong>{activeRecord.title || activeTopic.title}</strong>
                   </div>
                   <p>
-                    文件状态：
-                    {activeRecord.legal_status
-                      ? PROVINCE_TOPIC_LEGAL_STATUS_LABELS[
-                          activeRecord.legal_status
-                        ]
-                      : "—"}
+                    {copy.legalStatus}:{" "}
+                    {legalStatusLabel(activeRecord.legal_status, locale)}
                     {activeRecord.operational_status
-                      ? ` · 运行状态：${
-                          PROVINCE_TOPIC_OPERATIONAL_STATUS_LABELS[
-                            activeRecord.operational_status
-                          ]
-                        }`
+                      ? ` · ${copy.operationalStatus}: ${operationalStatusLabel(
+                          activeRecord.operational_status,
+                          locale,
+                        )}`
                       : ""}
-                    {` · 核验截至 ${formatDate(activeRecord.as_of_date)}`}
+                    {` · ${copy.asOf} ${formatDate(activeRecord.as_of_date, locale)}`}
                   </p>
                   {activeRecord.source_url ? (
                     <a
@@ -679,42 +709,37 @@ export function ChinaProvinceMarketAtlas({
                       target="_blank"
                       rel="noreferrer"
                     >
-                      {activeRecord.source_name || "查看主来源"} ↗
+                      {activeRecord.source_name || copy.source} ↗
                     </a>
                   ) : null}
                 </>
               ) : (
                 <>
                   <div>
-                    <span>通用已发布记录（非专题结论）</span>
+                    <span>
+                      {copy.supportingSignals} / {copy.supportingMetrics}
+                    </span>
                     <strong>
                       {activeProvinceSignals.length} Signals ·{" "}
                       {activeProvinceMetrics.length} Metrics
                     </strong>
                   </div>
-                  <p>
-                    这些通用记录不能自动证明当前专题字段。请由管理员在“省级七专题”模块建立字段值、覆盖状态和证据后发布。
-                  </p>
+                  <p>{copy.supportingNote}</p>
                 </>
               )}
             </footer>
           </article>
         ) : (
           <div className={styles.noProvinceState}>
-            <strong>暂无省级地区</strong>
-            <p>请先在 regions 表中建立 parent_id 指向中国的 province 记录。</p>
+            <strong>{copy.configTitle}</strong>
+            <p>{copy.configBody}</p>
           </div>
         )}
       </div>
 
       <footer className={styles.methodology}>
         <span>Availability protocol</span>
-        <p>
-          省份身份来自 regions 表；专题值只来自
-          china_province_topic_records / fields
-          中已发布的最新记录。缺失值以明确覆盖状态和“—”展示，真实数值 0
-          保持为 0；通用 Signal / Metric 不参与专题字段推断。
-        </p>
+        <p>{copy.coverageRule}</p>
       </footer>
     </section>
   );

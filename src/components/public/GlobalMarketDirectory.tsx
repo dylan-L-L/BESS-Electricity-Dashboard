@@ -1,4 +1,5 @@
 import type { MarketMetric, Region, Signal } from "@/lib/types";
+import { type DisplayLocale, getMessages, regionDisplayName } from "@/lib/i18n";
 import { compareContinents, compareCountries } from "@/lib/region-order";
 
 import styles from "./GlobalMarketDirectory.module.css";
@@ -21,10 +22,6 @@ const EMPTY_COUNTS: RecordCounts = {
 
 function classNames(...values: Array<string | false | null | undefined>): string {
   return values.filter(Boolean).join(" ");
-}
-
-function regionLabel(region: GlobalDirectoryRegion): string {
-  return region.name_zh || region.name_en || region.code || region.slug;
 }
 
 function defaultRegionHref(region: GlobalDirectoryRegion): string {
@@ -96,13 +93,6 @@ function availabilityState(counts: RecordCounts): "available" | "demo-only" | "n
   return "no-data";
 }
 
-function availabilityLabel(counts: RecordCounts): string {
-  const state = availabilityState(counts);
-  if (state === "available") return `${realRecordCount(counts)} 条真实公开记录`;
-  if (state === "demo-only") return "仅有 Demo 记录";
-  return "暂无真实公开数据";
-}
-
 function addCounts(left: RecordCounts, right: RecordCounts): RecordCounts {
   return {
     realSignals: left.realSignals + right.realSignals,
@@ -121,6 +111,7 @@ export interface GlobalMarketDirectoryProps {
   getRegionHref?: (region: GlobalDirectoryRegion) => string;
   representativeCountryLimit?: number;
   className?: string;
+  locale?: DisplayLocale;
 }
 
 /**
@@ -136,7 +127,18 @@ export function GlobalMarketDirectory({
   getRegionHref = defaultRegionHref,
   representativeCountryLimit = 6,
   className,
+  locale = "zh-CN",
 }: GlobalMarketDirectoryProps) {
+  const copy = getMessages(locale).globalDirectory;
+  const regionLabel = (region: GlobalDirectoryRegion) =>
+    regionDisplayName(region, locale);
+  const availabilityLabel = (counts: RecordCounts): string => {
+    const state = availabilityState(counts);
+    if (state === "available") return copy.available(realRecordCount(counts));
+    if (state === "demo-only") return copy.demoOnly;
+    return copy.noData;
+  };
+
   const continents = regions
     .filter((region) => region.region_type === "continent")
     .sort(compareContinents);
@@ -184,10 +186,8 @@ export function GlobalMarketDirectory({
       >
         <div className={styles.configurationCard}>
           <span>REGION CONFIGURATION REQUIRED</span>
-          <h2 id="global-directory-title">未找到大洲地区记录</h2>
-          <p>
-            请在 regions 表中建立 continent 记录，并让 country 记录通过 parent_id 归属大洲。组件不会在前端维护第二份大洲或国家清单。
-          </p>
+          <h2 id="global-directory-title">{copy.configTitle}</h2>
+          <p>{copy.configBody}</p>
         </div>
       </section>
     );
@@ -201,61 +201,63 @@ export function GlobalMarketDirectory({
     >
       <header className={styles.header}>
         <div className={styles.headerCopy}>
-          <div className={styles.eyebrow}>Global area ledger / 全球地区目录</div>
+          <div className={styles.eyebrow}>{copy.eyebrow}</div>
           <h2 id="global-directory-title">
-            Markets by
+            {copy.title}
             <br />
-            <em>continent.</em>
+            <em>{copy.titleEm}</em>
           </h2>
-          <p>
-            从 regions 的大洲—国家层级进入公开政策与市场档案。国家代表项按真实公开记录数量排序；没有数据时仍保留目录链接，但不会伪造可用性。
-          </p>
+          <p>{copy.description}</p>
         </div>
 
-        <aside className={styles.summary} aria-label="全球目录公开数据摘要">
+        <aside className={styles.summary} aria-label={copy.summaryLabel}>
           <div className={styles.summaryTopline}>
-            <span>PUBLIC AVAILABILITY</span>
-            <strong>{continents.length} / {expectedContinentCount}</strong>
+            <span>{copy.availability}</span>
+            <strong>
+              {continents.length} / {expectedContinentCount}
+            </strong>
           </div>
           <div className={styles.summaryValue}>
-            <strong>{realRecordCount(directoryCounts) || "暂无"}</strong>
+            <strong>
+              {realRecordCount(directoryCounts) || copy.noneYet}
+            </strong>
             <span>
-              {realRecordCount(directoryCounts) > 0 ? "条真实公开记录" : "真实公开数据"}
+              {realRecordCount(directoryCounts) > 0
+                ? copy.realRecords
+                : copy.noRealData}
             </span>
           </div>
           <dl className={styles.summaryGrid}>
             <div>
-              <dt>Published Signals</dt>
+              <dt>{copy.publishedSignals}</dt>
               <dd>{directoryCounts.realSignals}</dd>
             </div>
             <div>
-              <dt>Published Metrics</dt>
+              <dt>{copy.publishedMetrics}</dt>
               <dd>{directoryCounts.realMetrics}</dd>
             </div>
             <div>
-              <dt>Demo excluded</dt>
+              <dt>{copy.demoExcluded}</dt>
               <dd>{demoRecordCount(directoryCounts)}</dd>
             </div>
           </dl>
-          <p>
-            Signal 仅在 published_at 非空且 review_status=published 时计数；Demo 记录单列，不计入真实可用性。
-          </p>
+          <p>{copy.summaryNote}</p>
         </aside>
       </header>
 
       {continents.length !== expectedContinentCount ? (
         <div className={styles.configurationNotice} role="note">
           <span>REGION CONFIG INCOMPLETE</span>
-          当前仅从数据库读取到 {continents.length} / {expectedContinentCount} 个大洲；未创建前端占位记录。
+          {copy.incomplete(continents.length, expectedContinentCount)}
         </div>
       ) : null}
 
       <div className={styles.sectionHeader}>
         <div>
-          <span>CONTINENT INDEX</span>
-          <h3>六大洲市场入口</h3>
+          <span>{copy.sectionKicker}</span>
+          <h3>{copy.sectionTitle}</h3>
         </div>
-        <p>真实数据 · Demo 边界 · 国家目录</p>
+        <p>{copy.sectionHint}</p>
       </div>
 
       <div className={styles.continentGrid}>
@@ -264,6 +266,10 @@ export function GlobalMarketDirectory({
           const active = activeRegion
             ? descendantIds(entry.continent.id, regions).has(activeRegion.id)
             : false;
+          const secondaryName =
+            locale === "en"
+              ? entry.continent.name_zh
+              : entry.continent.name_en;
           return (
             <article
               className={classNames(
@@ -274,7 +280,9 @@ export function GlobalMarketDirectory({
               key={entry.continent.id}
             >
               <header className={styles.cardHeader}>
-                <span className={styles.cardIndex}>{String(index + 1).padStart(2, "0")}</span>
+                <span className={styles.cardIndex}>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
                 <div className={styles.cardStatus} data-state={state}>
                   <i aria-hidden="true" />
                   {availabilityLabel(entry.counts)}
@@ -285,7 +293,7 @@ export function GlobalMarketDirectory({
                 <div>
                   <span>{entry.continent.code || entry.continent.slug}</span>
                   <h4>{regionLabel(entry.continent)}</h4>
-                  {entry.continent.name_en ? <p>{entry.continent.name_en}</p> : null}
+                  {secondaryName ? <p>{secondaryName}</p> : null}
                 </div>
                 {entry.continent.is_demo || demoRecordCount(entry.counts) > 0 ? (
                   <span className={styles.demoBadge}>Demo boundary</span>
@@ -309,8 +317,8 @@ export function GlobalMarketDirectory({
 
               <div className={styles.countrySection}>
                 <div className={styles.countryLabel}>
-                  <span>Representative countries</span>
-                  <strong>{entry.countries.length} total</strong>
+                  <span>{copy.representativeCountries}</span>
+                  <strong>{copy.total(entry.countries.length)}</strong>
                 </div>
                 {entry.representativeCountries.length ? (
                   <ul className={styles.countryList}>
@@ -320,14 +328,19 @@ export function GlobalMarketDirectory({
                         <li key={region.id}>
                           <a
                             href={getRegionHref(region)}
-                            aria-current={activeRegionId === region.id ? "page" : undefined}
-                            aria-label={`${regionLabel(region)}，${availabilityLabel(counts)}`}
+                            aria-current={
+                              activeRegionId === region.id ? "page" : undefined
+                            }
+                            aria-label={`${regionLabel(region)}, ${availabilityLabel(counts)}`}
                           >
                             <span>
                               <strong>{regionLabel(region)}</strong>
                               <small>{region.code || region.slug}</small>
                             </span>
-                            <span className={styles.countryAvailability} data-state={countryState}>
+                            <span
+                              className={styles.countryAvailability}
+                              data-state={countryState}
+                            >
                               {realRecordCount(counts) > 0
                                 ? realRecordCount(counts)
                                 : countryState === "demo-only"
@@ -341,19 +354,22 @@ export function GlobalMarketDirectory({
                     })}
                   </ul>
                 ) : (
-                  <div className={styles.emptyCountries}>暂无 country 子地区记录</div>
+                  <div className={styles.emptyCountries}>{copy.emptyCountries}</div>
                 )}
               </div>
 
               <footer className={styles.cardFooter}>
                 <span>
-                  Demo {demoRecordCount(entry.counts)} · Real {realRecordCount(entry.counts)}
+                  Demo {demoRecordCount(entry.counts)} · Real{" "}
+                  {realRecordCount(entry.counts)}
                 </span>
                 <a
                   href={getRegionHref(entry.continent)}
-                  aria-current={activeRegionId === entry.continent.id ? "page" : undefined}
+                  aria-current={
+                    activeRegionId === entry.continent.id ? "page" : undefined
+                  }
                 >
-                  进入大洲档案 <span aria-hidden="true">↗</span>
+                  {copy.enterContinent} <span aria-hidden="true">↗</span>
                 </a>
               </footer>
             </article>
@@ -362,10 +378,8 @@ export function GlobalMarketDirectory({
       </div>
 
       <footer className={styles.boundaryNote}>
-        <span>Availability protocol</span>
-        <p>
-          目录身份和父子关系完全来自 regions。真实可用性排除 is_demo 记录；数值为零只表示已发布记录计数为零，不代表该市场指标值为 0。
-        </p>
+        <span>{copy.boundaryTitle}</span>
+        <p>{copy.boundaryBody}</p>
       </footer>
     </section>
   );
