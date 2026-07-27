@@ -1,22 +1,16 @@
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft / 草案",
-  consultation: "Consultation / 征求意见",
-  filed: "Filed / 已提交",
-  approved: "Approved / 已批准",
-  effective: "Effective / 已生效",
-  suspended: "Suspended / 已暂停",
-  other: "Other / 其他",
-};
+import type { DisplayLocale } from "@/lib/i18n";
+import { getMessages, localeTag } from "@/lib/i18n";
 
 export function formatNullableNumber(
   value: number | null | undefined,
   maximumFractionDigits = 2,
+  locale: DisplayLocale = "zh-CN",
 ): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "—";
   }
 
-  return value.toLocaleString("zh-CN", { maximumFractionDigits });
+  return value.toLocaleString(localeTag(locale), { maximumFractionDigits });
 }
 
 export function formatOptionalText(value: string | null | undefined): string {
@@ -24,21 +18,29 @@ export function formatOptionalText(value: string | null | undefined): string {
   return normalized ? normalized : "—";
 }
 
-export function formatDate(value: string | null | undefined): string {
+export function formatDate(
+  value: string | null | undefined,
+  locale: DisplayLocale = "zh-CN",
+): string {
   if (!value) return "—";
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
-  return new Intl.DateTimeFormat("zh-CN", {
+  return new Intl.DateTimeFormat(localeTag(locale), {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(date);
 }
 
-export function normalizedStatusLabel(status: string | null | undefined): string {
-  return status ? (STATUS_LABELS[status] ?? status) : "—";
+export function normalizedStatusLabel(
+  status: string | null | undefined,
+  locale: DisplayLocale = "zh-CN",
+): string {
+  if (!status) return "—";
+  const labels = getMessages(locale).statusLabels;
+  return labels[status] ?? status;
 }
 
 export function statusClassName(status: string | null | undefined): string {

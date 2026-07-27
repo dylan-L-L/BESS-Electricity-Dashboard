@@ -1,6 +1,7 @@
 import { Dashboard } from "@/components/public";
 import { SetupRequired } from "@/components/system/setup-required";
 import { getPublicDashboardData } from "@/lib/data/public";
+import { getRequestDisplayLocale } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,11 @@ export default async function HomePage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const [{ q = "" }, data] = await Promise.all([searchParams, getPublicDashboardData()]);
+  const [{ q = "" }, data, locale] = await Promise.all([
+    searchParams,
+    getPublicDashboardData(),
+    getRequestDisplayLocale(),
+  ]);
   if (!data.configured) return <SetupRequired />;
 
   const globalRegion = data.regions.find((region) => region.region_type === "global");
@@ -21,6 +26,7 @@ export default async function HomePage({
       provinceTopics={data.provinceTopics}
       activeRegion={globalRegion}
       searchQuery={q}
+      locale={locale}
     />
   );
 }

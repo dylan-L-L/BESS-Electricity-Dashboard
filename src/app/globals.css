@@ -595,6 +595,65 @@ a:focus-visible {
   background: var(--gl-highlight);
 }
 
+.gl-topbar-actions,
+.gl-detail-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
+}
+
+.gl-lang-switch {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 44px;
+  border: 1px solid #858985;
+  border-radius: 99px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.gl-lang-switch[data-pending="true"] {
+  opacity: 0.72;
+}
+
+.gl-lang-switch button {
+  min-width: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-right: 1px solid #d7dad4;
+  color: #4d534e;
+  background: transparent;
+  font-family: var(--gl-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.gl-lang-switch button:last-child {
+  border-right: 0;
+}
+
+.gl-lang-switch button:hover:not(:disabled) {
+  color: #111111;
+  background: #f7f7f3;
+}
+
+.gl-lang-switch button.is-active {
+  color: #111111;
+  background: var(--gl-highlight);
+}
+
+.gl-lang-switch button:disabled {
+  cursor: wait;
+}
+
+.gl-lang-switch button:focus-visible {
+  outline: 2px solid var(--gl-signal);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
 .gl-hero {
   position: relative;
   min-height: 280px;
@@ -1551,11 +1610,15 @@ a:focus-visible {
   }
 
   .gl-topbar {
-    grid-template-columns: minmax(140px, 1fr) minmax(220px, 360px);
+    grid-template-columns: minmax(140px, 1fr) minmax(220px, 360px) auto;
   }
 
   .gl-view-button {
     display: none;
+  }
+
+  .gl-topbar-actions {
+    gap: 0;
   }
 
   .gl-hero {

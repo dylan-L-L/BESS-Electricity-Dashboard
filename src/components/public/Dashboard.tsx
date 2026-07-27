@@ -7,10 +7,12 @@ import type {
 } from "@/lib/types";
 import Link from "next/link";
 
+import { type DisplayLocale, getMessages, regionDisplayName } from "@/lib/i18n";
 import { compareContinents, compareCountries } from "@/lib/region-order";
 
 import { ChinaProvinceMarketAtlas } from "./ChinaProvinceMarketAtlas";
 import { GlobalMarketDirectory } from "./GlobalMarketDirectory";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import {
   formatDate,
   formatNullableNumber,
@@ -43,10 +45,6 @@ function defaultRegionHref(region: Region): string {
 
 function defaultSignalHref(signal: Signal): string {
   return `/signals/${signal.id}`;
-}
-
-function regionName(region: Region | undefined): string {
-  return region?.name_zh || region?.name_en || region?.code || "未命名地区";
 }
 
 function regionCode(region: Region): string {
@@ -85,6 +83,7 @@ function matchesSearch(
   signal: PublishedSignal,
   query: string,
   regionsById: Map<string, Region>,
+  locale: DisplayLocale,
 ): boolean {
   if (!query) return true;
   const region = regionsById.get(signal.region_id);
@@ -102,9 +101,9 @@ function matchesSearch(
   ]
     .filter(Boolean)
     .join(" ")
-    .toLocaleLowerCase("zh-CN");
+    .toLocaleLowerCase(locale === "en" ? "en" : "zh-CN");
 
-  return haystack.includes(query.toLocaleLowerCase("zh-CN"));
+  return haystack.includes(query.toLocaleLowerCase(locale === "en" ? "en" : "zh-CN"));
 }
 
 export function isPublishedSignal(signal: Signal): signal is PublishedSignal {
@@ -134,6 +133,7 @@ export interface RegionSelectorProps {
   activeRegionId?: string | null;
   allHref?: string;
   getRegionHref?: RegionHref;
+  locale?: DisplayLocale;
 }
 
 export function RegionSelector({
@@ -142,7 +142,11 @@ export function RegionSelector({
   activeRegionId,
   allHref = "/",
   getRegionHref = defaultRegionHref,
+  locale = "zh-CN",
 }: RegionSelectorProps) {
+  const copy = getMessages(locale).regionSelector;
+  const unnamed = getMessages(locale).unnamedRegion;
+  const regionName = (region?: Region) => regionDisplayName(region, locale, unnamed);
   const globalRegion = regions.find((region) => region.region_type === "global");
   const continents = regions
     .filter((region) => region.region_type === "continent")
@@ -161,8 +165,7 @@ export function RegionSelector({
       : activeRegion?.region_type === "province"
         ? countries.find((country) => country.id === activeRegion.parent_id)
         : undefined;
-  const activeCountryId =
-    activeCountry?.id ?? null;
+  const activeCountryId = activeCountry?.id ?? null;
   const activeContinentId =
     activeRegion?.region_type === "continent"
       ? activeRegion.id
@@ -181,9 +184,9 @@ export function RegionSelector({
   };
 
   return (
-    <nav className="gl-region-directory" aria-label="地区选择器">
+    <nav className="gl-region-directory" aria-label={copy.label}>
       <div className="gl-directory-label">
-        <span>Area directory</span>
+        <span>{copy.areaDirectory}</span>
         <i aria-hidden="true" />
       </div>
 
@@ -193,14 +196,18 @@ export function RegionSelector({
         }`}
         href={globalRegion ? getRegionHref(globalRegion) : allHref}
         aria-current={!activeRegionId || activeRegionId === globalRegion?.id ? "page" : undefined}
-        aria-label={`${globalRegion ? regionName(globalRegion) : "全局观察"}，真实 ${globalCounts.real} 条，Demo ${globalCounts.demo} 条`}
+        aria-label={copy.ariaCounts(
+          globalRegion ? regionName(globalRegion) : copy.globalWatch,
+          globalCounts.real,
+          globalCounts.demo,
+        )}
       >
         <span className="gl-region-dot" />
-        <span>{globalRegion ? regionName(globalRegion) : "全局观察"}</span>
+        <span>{globalRegion ? regionName(globalRegion) : copy.globalWatch}</span>
         <span className="gl-region-count">{String(globalCounts.real).padStart(2, "0")}</span>
       </a>
 
-      <div className="gl-region-group">Continent / 大洲</div>
+      <div className="gl-region-group">{copy.continents}</div>
       {continents.map((continent) => {
         const continentCounts = countForRegion(continent);
         const continentCountries = countries.filter(
@@ -215,7 +222,11 @@ export function RegionSelector({
               }`}
               href={getRegionHref(continent)}
               aria-current={activeRegionId === continent.id ? "page" : undefined}
-              aria-label={`${regionName(continent)}，真实 ${continentCounts.real} 条，Demo ${continentCounts.demo} 条`}
+              aria-label={copy.ariaCounts(
+                regionName(continent),
+                continentCounts.real,
+                continentCounts.demo,
+              )}
               title={`${regionName(continent)} · Demo ${continentCounts.demo}`}
             >
               <span className="gl-region-dot" />
@@ -226,68 +237,78 @@ export function RegionSelector({
                 {String(continentCounts.real).padStart(2, "0")}
               </span>
             </a>
-            {showCountries ? <div className="gl-country-stack">
-              {continentCountries.map((country) => {
-                const countryCounts = countForRegion(country);
-                const countryProvinces = provinces.filter(
-                  (province) => province.parent_id === country.id,
-                );
-                const showProvinces = activeCountryId === country.id;
-                return (
-                  <div className="gl-country-cluster" key={country.id}>
-                    <a
-                      className={`gl-region-button is-country ${
-                        activeRegionId === country.id ? "is-active" : ""
-                      }`}
-                      href={getRegionHref(country)}
-                      aria-current={activeRegionId === country.id ? "page" : undefined}
-                      aria-label={`${regionName(country)}，真实 ${countryCounts.real} 条，Demo ${countryCounts.demo} 条`}
-                      title={`${regionName(country)} · Demo ${countryCounts.demo}`}
-                    >
-                      <span className="gl-region-dot" />
-                      <span>
-                        {regionName(country)} <small>· {regionCode(country)}</small>
-                      </span>
-                      <span className="gl-region-count">
-                        {String(countryCounts.real).padStart(2, "0")}
-                      </span>
-                    </a>
-                    {showProvinces
-                      ? countryProvinces.map((province) => {
-                          const provinceCounts = countForRegion(province);
-                          return (
-                          <a
-                            className={`gl-region-button is-province ${
-                              activeRegionId === province.id ? "is-active" : ""
-                            }`}
-                            href={getRegionHref(province)}
-                            aria-current={
-                              activeRegionId === province.id ? "page" : undefined
-                            }
-                            aria-label={`${regionName(province)}，真实 ${provinceCounts.real} 条，Demo ${provinceCounts.demo} 条`}
-                            title={`${regionName(province)} · Demo ${provinceCounts.demo}`}
-                            key={province.id}
-                          >
-                            <span className="gl-region-dot" />
-                            <span>{regionName(province)}</span>
-                            <span className="gl-region-count">
-                              {String(provinceCounts.real).padStart(2, "0")}
-                            </span>
-                          </a>
-                          );
-                        })
-                      : null}
-                  </div>
-                );
-              })}
-            </div> : null}
+            {showCountries ? (
+              <div className="gl-country-stack">
+                {continentCountries.map((country) => {
+                  const countryCounts = countForRegion(country);
+                  const countryProvinces = provinces.filter(
+                    (province) => province.parent_id === country.id,
+                  );
+                  const showProvinces = activeCountryId === country.id;
+                  return (
+                    <div className="gl-country-cluster" key={country.id}>
+                      <a
+                        className={`gl-region-button is-country ${
+                          activeRegionId === country.id ? "is-active" : ""
+                        }`}
+                        href={getRegionHref(country)}
+                        aria-current={activeRegionId === country.id ? "page" : undefined}
+                        aria-label={copy.ariaCounts(
+                          regionName(country),
+                          countryCounts.real,
+                          countryCounts.demo,
+                        )}
+                        title={`${regionName(country)} · Demo ${countryCounts.demo}`}
+                      >
+                        <span className="gl-region-dot" />
+                        <span>
+                          {regionName(country)} <small>· {regionCode(country)}</small>
+                        </span>
+                        <span className="gl-region-count">
+                          {String(countryCounts.real).padStart(2, "0")}
+                        </span>
+                      </a>
+                      {showProvinces
+                        ? countryProvinces.map((province) => {
+                            const provinceCounts = countForRegion(province);
+                            return (
+                              <a
+                                className={`gl-region-button is-province ${
+                                  activeRegionId === province.id ? "is-active" : ""
+                                }`}
+                                href={getRegionHref(province)}
+                                aria-current={
+                                  activeRegionId === province.id ? "page" : undefined
+                                }
+                                aria-label={copy.ariaCounts(
+                                  regionName(province),
+                                  provinceCounts.real,
+                                  provinceCounts.demo,
+                                )}
+                                title={`${regionName(province)} · Demo ${provinceCounts.demo}`}
+                                key={province.id}
+                              >
+                                <span className="gl-region-dot" />
+                                <span>{regionName(province)}</span>
+                                <span className="gl-region-count">
+                                  {String(provinceCounts.real).padStart(2, "0")}
+                                </span>
+                              </a>
+                            );
+                          })
+                        : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         );
       })}
 
       {countries.some((country) => !country.parent_id) ? (
         <>
-          <div className="gl-region-group">Unassigned / 未分组国家</div>
+          <div className="gl-region-group">{copy.unassignedCountries}</div>
           {countries
             .filter((country) => !country.parent_id)
             .map((country) => (
@@ -303,7 +324,7 @@ export function RegionSelector({
                 <span className="gl-region-dot" />
                 <span>{regionName(country)}</span>
                 <span className="gl-region-count">
-                  {String(countForRegion(country)).padStart(2, "0")}
+                  {String(countForRegion(country).real).padStart(2, "0")}
                 </span>
               </a>
             ))}
@@ -312,7 +333,7 @@ export function RegionSelector({
 
       {provinces.some((province) => !province.parent_id) ? (
         <>
-          <div className="gl-region-group">Province / 省级</div>
+          <div className="gl-region-group">{copy.provinces}</div>
           {provinces
             .filter((province) => !province.parent_id)
             .map((province) => (
@@ -325,7 +346,9 @@ export function RegionSelector({
               >
                 <span className="gl-region-dot" />
                 <span>{regionName(province)}</span>
-                <span className="gl-region-count">{String(countForRegion(province)).padStart(2, "0")}</span>
+                <span className="gl-region-count">
+                  {String(countForRegion(province).real).padStart(2, "0")}
+                </span>
               </a>
             ))}
         </>
@@ -337,9 +360,15 @@ export function RegionSelector({
 export interface SearchFormProps {
   defaultValue?: string;
   action?: string;
+  locale?: DisplayLocale;
 }
 
-export function SearchForm({ defaultValue = "", action = "/" }: SearchFormProps) {
+export function SearchForm({
+  defaultValue = "",
+  action = "/",
+  locale = "zh-CN",
+}: SearchFormProps) {
+  const copy = getMessages(locale).search;
   return (
     <form className="gl-search-box" action={action} method="get" role="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
@@ -347,29 +376,30 @@ export function SearchForm({ defaultValue = "", action = "/" }: SearchFormProps)
         <path d="m20 20-3.5-3.5" />
       </svg>
       <label className="gl-sr-only" htmlFor="public-search">
-        搜索已发布内容
+        {copy.label}
       </label>
       <input
         id="public-search"
         name="q"
         type="search"
-        placeholder="搜索地区、政策、市场信号…"
+        placeholder={copy.placeholder}
         defaultValue={defaultValue}
         autoComplete="off"
       />
-      <button type="submit">搜索</button>
+      <button type="submit">{copy.submit}</button>
     </form>
   );
 }
 
 export interface StatusPillProps {
   status: string | null | undefined;
+  locale?: DisplayLocale;
 }
 
-export function StatusPill({ status }: StatusPillProps) {
+export function StatusPill({ status, locale = "zh-CN" }: StatusPillProps) {
   return (
     <span className={`gl-status-pill ${statusClassName(status)}`} data-status={status || "other"}>
-      {normalizedStatusLabel(status)}
+      {normalizedStatusLabel(status, locale)}
     </span>
   );
 }
@@ -378,18 +408,21 @@ export interface SignalListProps {
   signals: Signal[];
   regions: Region[];
   getSignalHref?: SignalHref;
+  locale?: DisplayLocale;
 }
 
 export function SignalList({
   signals,
   regions,
   getSignalHref = defaultSignalHref,
+  locale = "zh-CN",
 }: SignalListProps) {
   const regionsById = new Map(regions.map((region) => [region.id, region]));
   const published = publishedSignalsOnly(signals);
+  const unnamed = getMessages(locale).unnamedRegion;
 
   if (!published.length) {
-    return <div className="gl-empty-state">没有匹配的已发布动态。</div>;
+    return <div className="gl-empty-state">{getMessages(locale).policy.empty}</div>;
   }
 
   return (
@@ -399,12 +432,12 @@ export function SignalList({
         return (
           <a className="gl-policy-item" href={getSignalHref(signal)} key={signal.id}>
             <div className="gl-policy-date">
-              {formatDate(signal.event_date || signal.published_at)}
-              <strong>{regionName(region)}</strong>
+              {formatDate(signal.event_date || signal.published_at, locale)}
+              <strong>{regionDisplayName(region, locale, unnamed)}</strong>
             </div>
             <div className="gl-policy-content">
               <div className="gl-pill-row">
-                <StatusPill status={signal.normalized_status} />
+                <StatusPill status={signal.normalized_status} locale={locale} />
                 {isDemo(signal) ? <span className="gl-demo-pill">Demo</span> : null}
               </div>
               <h3>{signal.title}</h3>
@@ -430,24 +463,30 @@ export interface MarketMetricsProps {
   metrics: MarketMetric[];
   regions: Region[];
   compact?: boolean;
+  locale?: DisplayLocale;
 }
 
-export function MarketMetrics({ metrics, regions, compact = false }: MarketMetricsProps) {
+export function MarketMetrics({
+  metrics,
+  regions,
+  compact = false,
+  locale = "zh-CN",
+}: MarketMetricsProps) {
   const regionsById = new Map(regions.map((region) => [region.id, region]));
   const published = publishedMetricsOnly(metrics);
+  const copy = getMessages(locale);
+  const unnamed = copy.unnamedRegion;
 
   if (!published.length) {
     return (
-      <div className="gl-empty-state gl-empty-state-bordered">
-        当前地区暂无已发布市场指标；缺失值不会按 0 展示。
-      </div>
+      <div className="gl-empty-state gl-empty-state-bordered">{copy.market.empty}</div>
     );
   }
 
   return (
     <div className={compact ? "gl-kpi-strip" : "gl-metric-grid"}>
       {published.map((metric) => {
-        const value = formatNullableNumber(metric.value);
+        const value = formatNullableNumber(metric.value, 2, locale);
         const region = regionsById.get(metric.region_id);
         return (
           <article className={compact ? "gl-kpi" : "gl-metric-card"} key={metric.id}>
@@ -461,12 +500,12 @@ export function MarketMetrics({ metrics, regions, compact = false }: MarketMetri
               {value !== "—" && metric.unit ? <span>{metric.unit}</span> : null}
             </div>
             <div className="gl-kpi-trend">
-              {region ? `${regionName(region)} · ` : ""}
+              {region ? `${regionDisplayName(region, locale, unnamed)} · ` : ""}
               {formatOptionalText(metric.period_label)}
             </div>
             {!compact ? (
               <div className="gl-metric-meta">
-                <span>截至 {formatDate(metric.as_of_date)}</span>
+                <span>{copy.market.asOf(formatDate(metric.as_of_date, locale))}</span>
                 <span>{formatOptionalText(metric.source_name)}</span>
               </div>
             ) : null}
@@ -487,6 +526,7 @@ export interface DashboardProps {
   searchAction?: string;
   getRegionHref?: RegionHref;
   getSignalHref?: SignalHref;
+  locale?: DisplayLocale;
 }
 
 export function Dashboard({
@@ -499,12 +539,14 @@ export function Dashboard({
   searchAction,
   getRegionHref = defaultRegionHref,
   getSignalHref = defaultSignalHref,
+  locale = "zh-CN",
 }: DashboardProps) {
+  const copy = getMessages(locale);
   const regionsById = new Map(regions.map((region) => [region.id, region]));
   const regionIds = scopedRegionIds(regions, activeRegion);
   const publishedSignals = publishedSignalsOnly(signals)
     .filter((signal) => !regionIds || regionIds.has(signal.region_id))
-    .filter((signal) => matchesSearch(signal, searchQuery.trim(), regionsById))
+    .filter((signal) => matchesSearch(signal, searchQuery.trim(), regionsById, locale))
     .sort(byNewestSignal);
   const publishedMetrics = publishedMetricsOnly(marketMetrics).filter(
     (metric) => !regionIds || regionIds.has(metric.region_id),
@@ -527,7 +569,9 @@ export function Dashboard({
     scopedProvinceTopics.some((record) => record.is_demo);
   const statusCount = (status: string) =>
     realPublishedSignals.filter((signal) => signal.normalized_status === status).length;
-  const activeName = activeRegion ? regionName(activeRegion) : "全局观察";
+  const activeName = activeRegion
+    ? regionDisplayName(activeRegion, locale, copy.unnamedRegion)
+    : copy.regionSelector.globalWatch;
   const activeCode = activeRegion ? regionCode(activeRegion) : "GLOBAL WATCH";
   const topSignals = publishedSignals.slice(0, 3);
   const resolvedSearchAction = searchAction || (activeRegion ? getRegionHref(activeRegion) : "/");
@@ -555,13 +599,13 @@ export function Dashboard({
     <>
       {hasDemoData ? (
         <div className="gl-demo-ribbon" role="note">
-          <span>Demo data</span> 演示记录仅用于产品验证，不代表真实政策或市场结论
+          <span>Demo data</span> {copy.demoRibbon}
         </div>
       ) : null}
 
       <div className={`gl-app-shell ${hasDemoData ? "has-demo-ribbon" : ""}`}>
-        <aside className="gl-sidebar" aria-label="Grid Ledger 导航">
-          <Link className="gl-brand" href="/" aria-label="Grid Ledger 首页">
+        <aside className="gl-sidebar" aria-label={copy.nav.sections}>
+          <Link className="gl-brand" href="/" aria-label={copy.signalDetail.homeAria}>
             <div className="gl-brand-mark" aria-hidden="true" />
             <div className="gl-brand-copy">
               <strong>
@@ -569,32 +613,32 @@ export function Dashboard({
                 <br />
                 Ledger
               </strong>
-              <span>Policy × Market Intelligence</span>
+              <span>{copy.brandTagline}</span>
             </div>
           </Link>
 
-          <nav className="gl-primary-nav" aria-label="页面区块">
+          <nav className="gl-primary-nav" aria-label={copy.nav.primary}>
             <a className="gl-nav-button is-active" href="#overview">
               <span className="gl-nav-index">01</span>
-              <span>情报总览</span>
+              <span>{copy.nav.overview}</span>
             </a>
             <a className="gl-nav-button" href="#market">
               <span className="gl-nav-index">02</span>
-              <span>市场指标</span>
+              <span>{copy.nav.market}</span>
             </a>
             <a className="gl-nav-button" href="#policy">
               <span className="gl-nav-index">03</span>
-              <span>政策动态</span>
+              <span>{copy.nav.policy}</span>
             </a>
             {isChinaScope ? (
               <a className="gl-nav-button" href="#china-market-atlas">
                 <span className="gl-nav-index">04</span>
-                <span>省级专题</span>
+                <span>{copy.nav.provinceTopics}</span>
               </a>
             ) : isGlobalDirectoryScope ? (
               <a className="gl-nav-button" href="#global-market-directory">
                 <span className="gl-nav-index">04</span>
-                <span>大洲市场</span>
+                <span>{copy.nav.continentMarkets}</span>
               </a>
             ) : null}
           </nav>
@@ -604,69 +648,77 @@ export function Dashboard({
             signals={signals}
             activeRegionId={activeRegion?.id}
             getRegionHref={getRegionHref}
+            locale={locale}
           />
 
           <div className="gl-sidebar-footer">
             <div className="gl-live-row">
               <span className="gl-live-dot" />
-              <strong>Published records</strong>
+              <strong>{copy.sidebar.publishedRecords}</strong>
             </div>
-            <span>公开端仅展示已发布数据</span>
+            <span>{copy.sidebar.publishedOnly}</span>
           </div>
         </aside>
 
         <main className="gl-workspace" id="overview">
           <header className="gl-topbar">
             <div className="gl-breadcrumb">
-              <span>Dashboard</span>
+              <span>{copy.topbar.dashboard}</span>
               <span>/</span>
               <strong>{activeName}</strong>
             </div>
-            <SearchForm defaultValue={searchQuery} action={resolvedSearchAction} />
-            <a className="gl-view-button" href="/admin/login">
-              ADMIN
-            </a>
+            <SearchForm
+              defaultValue={searchQuery}
+              action={resolvedSearchAction}
+              locale={locale}
+            />
+            <div className="gl-topbar-actions">
+              <LanguageSwitcher locale={locale} />
+              <a className="gl-view-button" href="/admin/login">
+                {copy.topbar.admin}
+              </a>
+            </div>
           </header>
 
           <section className="gl-hero" data-index={activeRegion?.code || "01"}>
             <div className="gl-hero-copy">
               <div className="gl-eyebrow">{activeCode}</div>
               <h1>
-                {activeRegion ? activeName : "Policy moves."}
+                {activeRegion ? activeName : copy.hero.globalTitle}
                 <br />
-                <em>{activeRegion ? "policy & market desk." : "Markets answer."}</em>
+                <em>{activeRegion ? copy.hero.regionEm : copy.hero.globalEm}</em>
               </h1>
-              <p className="gl-hero-description">
-                从已发布记录读取政策动态与市场指标。状态、日期、地区和原文来源彼此独立展示，草稿不会进入公开视图。
-              </p>
+              <p className="gl-hero-description">{copy.hero.description}</p>
             </div>
             <div className="gl-hero-meta">
               <div className="gl-meta-row">
-                <span>Real published signals</span>
+                <span>{copy.hero.realSignals}</span>
                 <strong className="good">{realPublishedSignals.length}</strong>
               </div>
               <div className="gl-meta-row">
-                <span>Real market metrics</span>
+                <span>{copy.hero.realMetrics}</span>
                 <strong>{realPublishedMetrics.length}</strong>
               </div>
               <div className="gl-meta-row">
-                <span>Demo fixtures</span>
+                <span>{copy.hero.demoFixtures}</span>
                 <strong>{demoRecordCount}</strong>
               </div>
             </div>
           </section>
 
           <div className="gl-mode-row">
-            <nav className="gl-mode-switch" aria-label="内容导航">
+            <nav className="gl-mode-switch" aria-label={copy.mode.label}>
               <a className="is-active" href="#overview">
-                综合视图
+                {copy.mode.combined}
               </a>
-              <a href="#policy">政策动态</a>
-              <a href="#market">市场指标</a>
-              {isChinaScope ? <a href="#china-market-atlas">省级专题</a> : null}
-              {isGlobalDirectoryScope ? <a href="#global-market-directory">大洲市场</a> : null}
+              <a href="#policy">{copy.mode.policy}</a>
+              <a href="#market">{copy.mode.market}</a>
+              {isChinaScope ? <a href="#china-market-atlas">{copy.mode.provinceTopics}</a> : null}
+              {isGlobalDirectoryScope ? (
+                <a href="#global-market-directory">{copy.mode.continentMarkets}</a>
+              ) : null}
             </nav>
-            <div className="gl-asof">DATABASE-BACKED · PUBLISHED ONLY</div>
+            <div className="gl-asof">{copy.mode.asOf}</div>
           </div>
 
           {isGlobalDirectoryScope ? (
@@ -677,6 +729,7 @@ export function Dashboard({
               activeRegionId={activeRegion?.id}
               getRegionHref={getRegionHref}
               representativeCountryLimit={6}
+              locale={locale}
             />
           ) : null}
 
@@ -690,16 +743,17 @@ export function Dashboard({
               initialProvinceId={
                 activeRegion?.region_type === "province" ? activeRegion.id : undefined
               }
+              locale={locale}
             />
           ) : null}
 
           {topSignals.length ? (
-            <section className="gl-signal-tape" aria-label="最新动态">
+            <section className="gl-signal-tape" aria-label={copy.policy.latest}>
               {topSignals.map((signal, index) => (
                 <a className="gl-tape-item" href={getSignalHref(signal)} key={signal.id}>
                   <span className="gl-tape-index">{String(index + 1).padStart(2, "0")}</span>
                   <span className="gl-tape-copy">
-                    <small>{normalizedStatusLabel(signal.normalized_status)}</small>
+                    <small>{normalizedStatusLabel(signal.normalized_status, locale)}</small>
                     <strong>{signal.title}</strong>
                   </span>
                 </a>
@@ -707,54 +761,63 @@ export function Dashboard({
             </section>
           ) : null}
 
-          <MarketMetrics metrics={publishedMetrics.slice(0, 4)} regions={regions} compact />
+          <MarketMetrics
+            metrics={publishedMetrics.slice(0, 4)}
+            regions={regions}
+            compact
+            locale={locale}
+          />
 
           <section className="gl-dashboard-grid" id="market">
             <article className="gl-panel gl-market-panel">
               <div className="gl-panel-header">
                 <div>
-                  <div className="gl-section-kicker">Published market data</div>
-                  <h2>市场指标</h2>
+                  <div className="gl-section-kicker">{copy.market.kicker}</div>
+                  <h2>{copy.market.title}</h2>
                 </div>
                 <span className="gl-record-count">
                   {realPublishedMetrics.length} REAL · {demoPublishedMetrics.length} DEMO
                 </span>
               </div>
-              <MarketMetrics metrics={publishedMetrics} regions={regions} />
+              <MarketMetrics metrics={publishedMetrics} regions={regions} locale={locale} />
             </article>
 
-            <aside className="gl-panel gl-signal-panel" aria-label="政策状态分布">
+            <aside className="gl-panel gl-signal-panel" aria-label={copy.status.title}>
               <div className="gl-panel-header">
                 <div>
-                  <div className="gl-section-kicker">Status ledger</div>
-                  <h2>状态分账</h2>
+                  <div className="gl-section-kicker">{copy.status.kicker}</div>
+                  <h2>{copy.status.title}</h2>
                 </div>
               </div>
               <div className="gl-status-ledger">
                 {(["filed", "approved", "draft", "effective"] as const).map((status) => (
                   <div className="gl-status-row" key={status}>
-                    <StatusPill status={status} />
+                    <StatusPill status={status} locale={locale} />
                     <strong>{statusCount(status)}</strong>
                   </div>
                 ))}
               </div>
-              <p className="gl-boundary-note">
-                Filed 不等于 Approved；Draft 不等于 Effective。状态统计仅计真实公开记录，Demo 另行标记。
-              </p>
+              <p className="gl-boundary-note">{copy.status.note}</p>
             </aside>
           </section>
 
           <section className="gl-panel gl-feed-panel" id="policy">
             <div className="gl-panel-header">
               <div>
-                <div className="gl-section-kicker">Published signal feed</div>
-                <h2>政策 / 市场动态</h2>
+                <div className="gl-section-kicker">{copy.policy.kicker}</div>
+                <h2>{copy.policy.title}</h2>
               </div>
               <div className="gl-record-count">
-                {String(realPublishedSignals.length).padStart(2, "0")} REAL · {String(demoPublishedSignals.length).padStart(2, "0")} DEMO
+                {String(realPublishedSignals.length).padStart(2, "0")} REAL ·{" "}
+                {String(demoPublishedSignals.length).padStart(2, "0")} DEMO
               </div>
             </div>
-            <SignalList signals={publishedSignals} regions={regions} getSignalHref={getSignalHref} />
+            <SignalList
+              signals={publishedSignals}
+              regions={regions}
+              getSignalHref={getSignalHref}
+              locale={locale}
+            />
           </section>
         </main>
       </div>
