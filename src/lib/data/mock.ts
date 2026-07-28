@@ -92,7 +92,7 @@ export const MOCK_METRICS: MarketMetric[] = [
 
 export const MOCK_PROVINCE_TOPICS: ProvinceTopicRecordWithFields[] = [
   {
-    id: "pt-1", region_id: "cn-sd", topic_id: "provincial_trading_rules",
+    id: "pt-1", region_id: "cn-sd", topic_id: "trading-rules",
     title: "山东省电力市场交易规则（储能参与）",
     summary: "山东省现行电力中长期交易及现货市场规则中关于新型储能参与的相关条款汇总。",
     legal_status: "effective", operational_status: "continuous",
@@ -108,7 +108,7 @@ export const MOCK_PROVINCE_TOPICS: ProvinceTopicRecordWithFields[] = [
     ],
   },
   {
-    id: "pt-2", region_id: "cn-sd", topic_id: "capacity_compensation",
+    id: "pt-2", region_id: "cn-sd", topic_id: "storage-capacity-compensation",
     title: "山东省储能容量补偿机制",
     summary: "山东省关于储能设施容量补偿电价及容量市场参与规则的政策梳理。",
     legal_status: "consultation", operational_status: "simulation",
@@ -130,4 +130,5 @@ export const MOCK_DASHBOARD_DATA = {
   signals: MOCK_SIGNALS,
   marketMetrics: MOCK_METRICS,
   provinceTopics: MOCK_PROVINCE_TOPICS,
+  cfdAuctions: [],
 };

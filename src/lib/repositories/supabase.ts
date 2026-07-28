@@ -2,6 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
   AdminSignalQuery,
+  CfdAuctionRepository,
+  CreateCfdAuctionRecord,
   CreateMarketMetricRecord,
   CreateProvinceTopicField,
   CreateProvinceTopicRecord,
@@ -14,11 +16,13 @@ import type {
   PublicSignalQuery,
   RegionRepository,
   SignalRepository,
+  UpdateCfdAuctionRecord,
   UpdateMarketMetricRecord,
   UpdateProvinceTopicRecord,
   UpdateSignalRecord,
 } from "./contracts";
 import type {
+  ChinaCfdAuction,
   MarketMetric,
   ProvinceTopicField,
   ProvinceTopicRecord,
@@ -248,6 +252,67 @@ export class SupabaseMarketMetricRepository implements MarketMetricRepository {
       .single();
     throwIfError("update market metric", error);
     return data as MarketMetric;
+  }
+}
+
+export class SupabaseCfdAuctionRepository implements CfdAuctionRepository {
+  constructor(private readonly client: SupabaseClient) {}
+
+  async listAdmin(): Promise<ChinaCfdAuction[]> {
+    const { data, error } = await this.client
+      .from("china_cfd_auctions")
+      .select("*")
+      .order("grid_region")
+      .order("province_label")
+      .order("delivery_year", { ascending: true, nullsFirst: false });
+    throwIfError("list admin cfd auctions", error);
+    return (data ?? []) as ChinaCfdAuction[];
+  }
+
+  async listPublic(): Promise<ChinaCfdAuction[]> {
+    const { data, error } = await this.client
+      .from("china_cfd_auctions")
+      .select("*")
+      .eq("is_published", true)
+      .order("grid_region")
+      .order("province_label")
+      .order("delivery_year", { ascending: true, nullsFirst: false });
+    throwIfError("list published cfd auctions", error);
+    return (data ?? []) as ChinaCfdAuction[];
+  }
+
+  async getAdminById(id: string): Promise<ChinaCfdAuction | null> {
+    const { data, error } = await this.client
+      .from("china_cfd_auctions")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    throwIfError("read admin cfd auction", error);
+    return (data as ChinaCfdAuction | null) ?? null;
+  }
+
+  async create(input: CreateCfdAuctionRecord): Promise<ChinaCfdAuction> {
+    const { data, error } = await this.client
+      .from("china_cfd_auctions")
+      .insert(input)
+      .select("*")
+      .single();
+    throwIfError("create cfd auction", error);
+    return data as ChinaCfdAuction;
+  }
+
+  async update(
+    id: string,
+    input: UpdateCfdAuctionRecord,
+  ): Promise<ChinaCfdAuction> {
+    const { data, error } = await this.client
+      .from("china_cfd_auctions")
+      .update(input)
+      .eq("id", id)
+      .select("*")
+      .single();
+    throwIfError("update cfd auction", error);
+    return data as ChinaCfdAuction;
   }
 }
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { requireAdminPage } from "@/lib/auth/admin";
 import {
+  SupabaseCfdAuctionRepository,
   SupabaseMarketMetricRepository,
   SupabaseProvinceTopicRepository,
   SupabaseRegionRepository,
@@ -17,6 +18,7 @@ async function repositories() {
     signals: new SupabaseSignalRepository(client),
     metrics: new SupabaseMarketMetricRepository(client),
     provinceTopics: new SupabaseProvinceTopicRepository(client),
+    cfdAuctions: new SupabaseCfdAuctionRepository(client),
   };
 }
 
@@ -56,6 +58,24 @@ export async function getAdminProvinceTopicListData() {
     repository.provinceTopics.listAdmin(),
   ]);
   return { regions, provinceTopics };
+}
+
+export async function getAdminCfdAuctionListData() {
+  const repository = await repositories();
+  const [regions, auctions] = await Promise.all([
+    repository.regions.list(),
+    repository.cfdAuctions.listAdmin(),
+  ]);
+  return { regions, auctions };
+}
+
+export async function getAdminCfdAuctionData(id?: string) {
+  const repository = await repositories();
+  const [regions, auction] = await Promise.all([
+    repository.regions.list(),
+    id ? repository.cfdAuctions.getAdminById(id) : Promise.resolve(null),
+  ]);
+  return { regions, auction };
 }
 
 export async function getAdminSignalData(id?: string) {

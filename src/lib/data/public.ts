@@ -3,6 +3,7 @@ import "server-only";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
+  SupabaseCfdAuctionRepository,
   SupabaseMarketMetricRepository,
   SupabaseProvinceTopicRepository,
   SupabaseRegionRepository,
@@ -11,6 +12,7 @@ import {
 import { SignalService } from "@/lib/services/signal-service";
 import { ProvinceTopicService } from "@/lib/services/province-topic-service";
 import type {
+  ChinaCfdAuction,
   MarketMetric,
   ProvinceTopicRecordWithFields,
   Region,
@@ -23,6 +25,7 @@ export type PublicDashboardData = {
   signals: Signal[];
   marketMetrics: MarketMetric[];
   provinceTopics: ProvinceTopicRecordWithFields[];
+  cfdAuctions: ChinaCfdAuction[];
 };
 
 const EMPTY_DATA: PublicDashboardData = {
@@ -31,6 +34,7 @@ const EMPTY_DATA: PublicDashboardData = {
   signals: [],
   marketMetrics: [],
   provinceTopics: [],
+  cfdAuctions: [],
 };
 
 export async function getPublicDashboardData(): Promise<PublicDashboardData> {
@@ -49,12 +53,16 @@ export async function getPublicDashboardData(): Promise<PublicDashboardData> {
       new SupabaseProvinceTopicRepository(client),
     );
 
-    const [regions, signals, marketMetrics, provinceTopics] = await Promise.all([
-      regionRepository.list(),
-      signalService.listPublic(),
-      metricRepository.listPublic(),
-      provinceTopicService.listPublic(),
-    ]);
+    const cfdAuctionRepository = new SupabaseCfdAuctionRepository(client);
+
+    const [regions, signals, marketMetrics, provinceTopics, cfdAuctions] =
+      await Promise.all([
+        regionRepository.list(),
+        signalService.listPublic(),
+        metricRepository.listPublic(),
+        provinceTopicService.listPublic(),
+        cfdAuctionRepository.listPublic(),
+      ]);
 
     return {
       configured: true,
@@ -62,6 +70,7 @@ export async function getPublicDashboardData(): Promise<PublicDashboardData> {
       signals,
       marketMetrics,
       provinceTopics,
+      cfdAuctions,
     };
   } catch {
     // Fallback: return mock data when Supabase is unreachable

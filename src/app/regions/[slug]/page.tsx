@@ -29,6 +29,7 @@ export default async function RegionPage({
       signals={data.signals}
       marketMetrics={data.marketMetrics}
       provinceTopics={data.provinceTopics}
+      cfdAuctions={data.cfdAuctions}
       activeRegion={region}
       searchQuery={q}
     />

@@ -1,4 +1,5 @@
 import type {
+  ChinaCfdAuction,
   MarketMetric,
   NormalizedStatus,
   ProvinceTopicRecordWithFields,
@@ -9,6 +10,7 @@ import Link from "next/link";
 
 import { compareContinents, compareCountries } from "@/lib/region-order";
 
+import { ChinaCfdAuctionTable } from "./ChinaCfdAuctionTable";
 import { ChinaProvinceMarketAtlas } from "./ChinaProvinceMarketAtlas";
 import { GlobalMarketDirectory } from "./GlobalMarketDirectory";
 import {
@@ -482,6 +484,7 @@ export interface DashboardProps {
   signals: Signal[];
   marketMetrics: MarketMetric[];
   provinceTopics: ProvinceTopicRecordWithFields[];
+  cfdAuctions?: ChinaCfdAuction[];
   activeRegion?: Region | null;
   searchQuery?: string;
   searchAction?: string;
@@ -494,6 +497,7 @@ export function Dashboard({
   signals,
   marketMetrics,
   provinceTopics,
+  cfdAuctions = [],
   activeRegion,
   searchQuery = "",
   searchAction,
@@ -560,15 +564,18 @@ export function Dashboard({
       ) : null}
 
       <div className={`gl-app-shell ${hasDemoData ? "has-demo-ribbon" : ""}`}>
-        <aside className="gl-sidebar" aria-label="Grid Ledger 导航">
-          <Link className="gl-brand" href="/" aria-label="Grid Ledger 首页">
-            <div className="gl-brand-mark" aria-hidden="true" />
+        <aside className="gl-sidebar" aria-label="Jinko ESS 导航">
+          <Link className="gl-brand" href="/" aria-label="Jinko ESS 首页">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="gl-brand-logo"
+              src="/jinko-ess-logo.png"
+              alt="Jinko ESS"
+              width={168}
+              height={102}
+            />
             <div className="gl-brand-copy">
-              <strong>
-                Grid
-                <br />
-                Ledger
-              </strong>
+              <strong>Grid Ledger</strong>
               <span>Policy × Market Intelligence</span>
             </div>
           </Link>
@@ -664,6 +671,9 @@ export function Dashboard({
               <a href="#policy">政策动态</a>
               <a href="#market">市场指标</a>
               {isChinaScope ? <a href="#china-market-atlas">省级专题</a> : null}
+              {isChinaScope && cfdAuctions.length ? (
+                <a href="#china-cfd-auctions">机制电价总表</a>
+              ) : null}
               {isGlobalDirectoryScope ? <a href="#global-market-directory">大洲市场</a> : null}
             </nav>
             <div className="gl-asof">DATABASE-BACKED · PUBLISHED ONLY</div>
@@ -687,11 +697,14 @@ export function Dashboard({
               signals={signals}
               marketMetrics={marketMetrics}
               provinceTopics={provinceTopics}
+              cfdAuctions={cfdAuctions}
               initialProvinceId={
                 activeRegion?.region_type === "province" ? activeRegion.id : undefined
               }
             />
           ) : null}
+
+          {isChinaScope ? <ChinaCfdAuctionTable auctions={cfdAuctions} /> : null}
 
           {topSignals.length ? (
             <section className="gl-signal-tape" aria-label="最新动态">

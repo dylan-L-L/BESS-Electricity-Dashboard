@@ -28,21 +28,24 @@
 }
 
 :root {
+  /* Jinko ESS brand palette sampled from the logo */
   --gl-ink: #ffffff;
-  --gl-ink-2: #f7f7f3;
-  --gl-ink-3: #efefe9;
+  --gl-ink-2: #f5f9f5;
+  --gl-ink-3: #ebf3eb;
   --gl-paper: #111111;
   --gl-paper-2: #2b2b2b;
   --gl-muted: #5d625f;
   --gl-rule: rgba(17, 17, 17, 0.12);
   --gl-rule-strong: rgba(17, 17, 17, 0.28);
-  --gl-signal: #245b36;
-  --gl-signal-soft: rgba(36, 91, 54, 0.08);
-  --gl-highlight: #d8ff62;
+  --gl-signal: #00a040;
+  --gl-signal-deep: #008234;
+  --gl-signal-soft: rgba(0, 160, 64, 0.1);
+  --gl-accent: #60a848;
+  --gl-highlight: #d7efb8;
   --gl-coral: #9f321f;
-  --gl-cyan: #006d5b;
-  --gl-amber: #795100;
-  --gl-blue: #315ba5;
+  --gl-cyan: #2f8f4e;
+  --gl-amber: #7a6a16;
+  --gl-blue: #2f6f4a;
   --gl-sidebar: 260px;
   --gl-font-display: "Grid Ledger UI", Arial, "STKaiti", "华文楷体", KaiTi, sans-serif;
   --gl-font-body: "Grid Ledger UI", Arial, "STKaiti", "华文楷体", KaiTi, sans-serif;
@@ -164,9 +167,9 @@ a:focus-visible {
 }
 
 .gl-demo-pill {
-  color: #245b36;
-  border-color: rgba(36, 91, 54, 0.35);
-  background: #f1f8ed;
+  color: var(--gl-signal-deep);
+  border-color: rgba(0, 160, 64, 0.35);
+  background: #edf8ee;
 }
 
 .gl-app-shell {
@@ -199,71 +202,42 @@ a:focus-visible {
 }
 
 .gl-brand {
-  min-height: 112px;
-  padding: 25px 22px 20px;
+  min-height: 0;
+  padding: 18px 18px 16px;
   border-bottom: 1px solid var(--gl-rule);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  display: grid;
+  gap: 10px;
   color: inherit;
   text-decoration: none;
 }
 
-.gl-brand-mark {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 auto;
-  display: inline-block;
-  border: 1px solid var(--gl-signal);
-  border-radius: 50%;
-}
-
-.gl-brand-mark::before,
-.gl-brand-mark::after {
-  position: absolute;
-  content: "";
-  background: var(--gl-signal);
-}
-
-.gl-brand-mark::before {
-  width: 18px;
-  height: 1px;
-  top: 18px;
-  left: 9px;
-  transform: rotate(-38deg);
-}
-
-.gl-brand-mark::after {
-  width: 5px;
-  height: 5px;
-  top: 8px;
-  right: 7px;
-  border-radius: 50%;
+.gl-brand-logo {
+  display: block;
+  width: min(100%, 168px);
+  height: auto;
 }
 
 .gl-brand-copy {
   min-width: 0;
-  flex: 1;
 }
 
 .gl-brand-copy strong {
   display: block;
+  color: var(--gl-signal-deep);
   font-family: var(--gl-font-display);
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.025em;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .gl-brand-copy span {
   display: block;
-  margin-top: 8px;
+  margin-top: 4px;
   color: var(--gl-muted);
   font-family: var(--gl-font-mono);
   font-size: 10px;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -294,8 +268,8 @@ a:focus-visible {
 }
 
 .gl-nav-button.is-active {
-  color: #111111;
-  background: var(--gl-highlight);
+  color: var(--gl-signal-deep);
+  background: var(--gl-signal-soft);
 }
 
 .gl-nav-index {
@@ -398,8 +372,8 @@ a:focus-visible {
 }
 
 .gl-region-button.is-active {
-  color: #111111;
-  background: #edf7e9;
+  color: var(--gl-signal-deep);
+  background: var(--gl-signal-soft);
 }
 
 .gl-region-button.is-subarea {
@@ -1192,20 +1166,16 @@ a:focus-visible {
   text-decoration: none;
 }
 
-.gl-detail-brand .gl-brand-mark {
-  width: 34px;
-  height: 34px;
-}
-
-.gl-detail-brand .gl-brand-mark::before {
-  top: 16px;
-  left: 8px;
+.gl-detail-brand .gl-brand-logo {
+  width: 112px;
+  height: auto;
 }
 
 .gl-detail-brand strong {
+  color: var(--gl-signal-deep);
   font-family: var(--gl-font-display);
-  font-size: 21px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .gl-back-link {
@@ -1927,9 +1897,9 @@ a:focus-visible {
 }
 
 .brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 13px;
+  display: grid;
+  gap: 10px;
+  align-items: start;
   margin-bottom: 34px;
   color: inherit;
   text-decoration: none;
@@ -1937,8 +1907,14 @@ a:focus-visible {
 
 .brand-lockup.compact {
   margin-bottom: 0;
-  padding: 24px 20px 22px;
+  padding: 18px 16px 16px;
   border-bottom: 1px solid var(--gl-rule);
+}
+
+.brand-lockup-logo {
+  display: block;
+  width: min(100%, 148px);
+  height: auto;
 }
 
 .brand-lockup > div {
@@ -1947,50 +1923,24 @@ a:focus-visible {
 
 .brand-lockup strong {
   display: block;
+  color: var(--gl-signal-deep);
   font-family: var(--gl-font-display);
-  font-size: 21px;
-  font-weight: 500;
-  line-height: 1;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.15;
 }
 
 .brand-lockup div > span {
   display: block;
-  margin-top: 6px;
+  margin-top: 4px;
   color: #5d625e;
   font-family: var(--gl-font-mono);
   font-size: 10px;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.12em;
 }
 
 .brand-orbit {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  border: 1px solid var(--gl-signal);
-  border-radius: 50%;
-}
-
-.brand-orbit::before {
-  position: absolute;
-  width: 18px;
-  height: 1px;
-  top: 18px;
-  left: 9px;
-  content: "";
-  background: var(--gl-signal);
-  transform: rotate(-38deg);
-}
-
-.brand-orbit::after {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  top: 8px;
-  right: 7px;
-  content: "";
-  border-radius: 50%;
-  background: var(--gl-signal);
+  display: none;
 }
 
 .section-kicker {
@@ -2159,14 +2109,14 @@ a:focus-visible {
 }
 
 .button.primary {
-  color: #111111;
-  border-color: #111111;
-  background: var(--gl-highlight);
+  color: #ffffff;
+  border-color: var(--gl-signal-deep);
+  background: var(--gl-signal);
 }
 
 .button.primary:hover:not(:disabled) {
-  color: #111111;
-  background: #e5ff96;
+  color: #ffffff;
+  background: var(--gl-signal-deep);
 }
 
 .button.danger {
@@ -2579,6 +2529,12 @@ a:focus-visible {
   border-bottom: 1px solid var(--gl-rule-strong);
 }
 
+.admin-form-subhead {
+  margin: 28px 0 14px;
+  padding-top: 18px;
+  border-top: 1px solid var(--gl-rule-strong);
+}
+
 .admin-form-section-heading {
   display: grid;
   grid-template-columns: 112px minmax(0, 1fr);
@@ -2707,15 +2663,8 @@ a:focus-visible {
     display: none;
   }
 
-  .brand-lockup.compact .brand-orbit {
-    width: 34px;
-    height: 34px;
-    flex-basis: 34px;
-  }
-
-  .brand-lockup.compact .brand-orbit::before {
-    top: 16px;
-    left: 8px;
+  .brand-lockup.compact .brand-lockup-logo {
+    width: 92px;
   }
 
   .admin-sidebar nav {

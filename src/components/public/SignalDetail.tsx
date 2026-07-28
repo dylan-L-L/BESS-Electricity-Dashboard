@@ -34,8 +34,15 @@ export function SignalDetail({ signal, region, backHref = "/", regionHref }: Sig
       ) : null}
 
       <header className="gl-detail-topbar">
-        <Link className="gl-detail-brand" href="/" aria-label="Grid Ledger 首页">
-          <span className="gl-brand-mark" aria-hidden="true" />
+        <Link className="gl-detail-brand" href="/" aria-label="Jinko ESS 首页">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="gl-brand-logo"
+            src="/jinko-ess-logo.png"
+            alt="Jinko ESS"
+            width={120}
+            height={73}
+          />
           <strong>Grid Ledger</strong>
         </Link>
         <a className="gl-back-link" href={backHref}>
