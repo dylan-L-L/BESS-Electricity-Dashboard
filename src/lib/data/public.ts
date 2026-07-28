@@ -34,30 +34,40 @@ const EMPTY_DATA: PublicDashboardData = {
 };
 
 export async function getPublicDashboardData(): Promise<PublicDashboardData> {
-  if (!getSupabaseConfig()) return EMPTY_DATA;
+  if (!getSupabaseConfig()) {
+    // Fallback: return mock data when Supabase is not configured
+    const { MOCK_DASHBOARD_DATA } = await import("./mock");
+    return MOCK_DASHBOARD_DATA;
+  }
 
-  const client = await createServerSupabaseClient();
-  const regionRepository = new SupabaseRegionRepository(client);
-  const signalService = new SignalService(new SupabaseSignalRepository(client));
-  const metricRepository = new SupabaseMarketMetricRepository(client);
-  const provinceTopicService = new ProvinceTopicService(
-    new SupabaseProvinceTopicRepository(client),
-  );
+  try {
+    const client = await createServerSupabaseClient();
+    const regionRepository = new SupabaseRegionRepository(client);
+    const signalService = new SignalService(new SupabaseSignalRepository(client));
+    const metricRepository = new SupabaseMarketMetricRepository(client);
+    const provinceTopicService = new ProvinceTopicService(
+      new SupabaseProvinceTopicRepository(client),
+    );
 
-  const [regions, signals, marketMetrics, provinceTopics] = await Promise.all([
-    regionRepository.list(),
-    signalService.listPublic(),
-    metricRepository.listPublic(),
-    provinceTopicService.listPublic(),
-  ]);
+    const [regions, signals, marketMetrics, provinceTopics] = await Promise.all([
+      regionRepository.list(),
+      signalService.listPublic(),
+      metricRepository.listPublic(),
+      provinceTopicService.listPublic(),
+    ]);
 
-  return {
-    configured: true,
-    regions,
-    signals,
-    marketMetrics,
-    provinceTopics,
-  };
+    return {
+      configured: true,
+      regions,
+      signals,
+      marketMetrics,
+      provinceTopics,
+    };
+  } catch {
+    // Fallback: return mock data when Supabase is unreachable
+    const { MOCK_DASHBOARD_DATA } = await import("./mock");
+    return MOCK_DASHBOARD_DATA;
+  }
 }
 
 export async function getPublishedSignalDetail(id: string) {

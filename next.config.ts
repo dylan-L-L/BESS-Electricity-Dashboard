@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // ensure Turbopack uses this repo as the workspace root (avoid wrong root detection)
+    root: process.cwd(),
+  },
   async headers() {
     return [
       {
