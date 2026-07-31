@@ -25,48 +25,68 @@ export type PublicDashboardData = {
   provinceTopics: ProvinceTopicRecordWithFields[];
 };
 
-const EMPTY_DATA: PublicDashboardData = {
-  configured: false,
-  regions: [],
-  signals: [],
-  marketMetrics: [],
-  provinceTopics: [],
-};
+async function getMockDashboardData(): Promise<PublicDashboardData> {
+  const { MOCK_DASHBOARD_DATA } = await import("./mock");
+  return MOCK_DASHBOARD_DATA;
+}
 
 export async function getPublicDashboardData(): Promise<PublicDashboardData> {
-  if (!getSupabaseConfig()) return EMPTY_DATA;
+  if (!getSupabaseConfig()) {
+    return getMockDashboardData();
+  }
 
-  const client = await createServerSupabaseClient();
-  const regionRepository = new SupabaseRegionRepository(client);
-  const signalService = new SignalService(new SupabaseSignalRepository(client));
-  const metricRepository = new SupabaseMarketMetricRepository(client);
-  const provinceTopicService = new ProvinceTopicService(
-    new SupabaseProvinceTopicRepository(client),
-  );
+  try {
+    const client = await createServerSupabaseClient();
+    const regionRepository = new SupabaseRegionRepository(client);
+    const signalService = new SignalService(new SupabaseSignalRepository(client));
+    const metricRepository = new SupabaseMarketMetricRepository(client);
+    const provinceTopicService = new ProvinceTopicService(
+      new SupabaseProvinceTopicRepository(client),
+    );
 
-  const [regions, signals, marketMetrics, provinceTopics] = await Promise.all([
-    regionRepository.list(),
-    signalService.listPublic(),
-    metricRepository.listPublic(),
-    provinceTopicService.listPublic(),
-  ]);
+    const [regions, signals, marketMetrics, provinceTopics] = await Promise.all([
+      regionRepository.list(),
+      signalService.listPublic(),
+      metricRepository.listPublic(),
+      provinceTopicService.listPublic(),
+    ]);
 
-  return {
-    configured: true,
-    regions,
-    signals,
-    marketMetrics,
-    provinceTopics,
-  };
+    return {
+      configured: true,
+      regions,
+      signals,
+      marketMetrics,
+      provinceTopics,
+    };
+  } catch {
+    // Local/dev fallback when Supabase is configured but unreachable.
+    return getMockDashboardData();
+  }
 }
 
 export async function getPublishedSignalDetail(id: string) {
-  if (!getSupabaseConfig()) return { configured: false, signal: null, region: null };
+  if (!getSupabaseConfig()) {
+    const { MOCK_SIGNALS, MOCK_REGIONS } = await import("./mock");
+    const signal = MOCK_SIGNALS.find((item) => item.id === id) ?? null;
+    const region = signal?.region_id
+      ? (MOCK_REGIONS.find((item) => item.id === signal.region_id) ?? null)
+      : null;
+    return { configured: true, signal, region };
+  }
 
-  const client = await createServerSupabaseClient();
-  const signalService = new SignalService(new SupabaseSignalRepository(client));
-  const regionRepository = new SupabaseRegionRepository(client);
-  const signal = await signalService.getPublicById(id);
-  const region = signal?.region_id ? await regionRepository.getById(signal.region_id) : null;
-  return { configured: true, signal, region };
+  try {
+    const client = await createServerSupabaseClient();
+    const signalService = new SignalService(new SupabaseSignalRepository(client));
+    const regionRepository = new SupabaseRegionRepository(client);
+    const signal = await signalService.getPublicById(id);
+    const region = signal?.region_id ? await regionRepository.getById(signal.region_id) : null;
+    return { configured: true, signal, region };
+  } catch {
+    const { MOCK_SIGNALS, MOCK_REGIONS } = await import("./mock");
+    const signal = MOCK_SIGNALS.find((item) => item.id === id) ?? null;
+    const region = signal?.region_id
+      ? (MOCK_REGIONS.find((item) => item.id === signal.region_id) ?? null)
+      : null;
+    return { configured: true, signal, region };
+  }
 }

@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Pin Turbopack to this repo so local/dev does not pick a wrong workspace root.
+    root: process.cwd(),
+  },
   async headers() {
     return [
       {
