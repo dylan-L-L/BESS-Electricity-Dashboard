@@ -10,7 +10,9 @@ export const POLICY_INGEST_MAX_DETAIL_CHARS = 12_000;
 
 /** Soft per-region draft budgets within the global weekly cap. */
 export const POLICY_INGEST_REGION_QUOTAS: Readonly<Record<string, number>> = {
-  china: 4,
+  global: 1,
+  china: 5,
+  guangdong: 1,
   india: 2,
   malaysia: 1,
   indonesia: 1,

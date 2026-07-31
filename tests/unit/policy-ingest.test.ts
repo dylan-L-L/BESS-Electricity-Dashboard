@@ -122,9 +122,31 @@ describe("policy ingest whitelist + quotas", () => {
     ).toBe(true);
   });
 
+  it("includes requested industry media / association list pages", () => {
+    const urls = new Set(POLICY_SOURCE_FEED_SEEDS.map((feed) => feed.list_url));
+    for (const url of [
+      "https://eszoneo.com/intel/policy-updates",
+      "https://www.ess-news.com/category/markets/policy/",
+      "https://www.escn.com.cn/news/564.html",
+      "https://www.gdshe.org/list/7.html",
+      "https://www.energy-storage.news/premium/content/?jsf=jet-engine&tax=subjects:435",
+      "https://www.utilitydive.com/topic/storage/",
+    ]) {
+      expect(urls.has(url)).toBe(true);
+    }
+    expect(
+      POLICY_SOURCE_FEED_SEEDS.some((feed) => feed.region_slug === "guangdong"),
+    ).toBe(true);
+    expect(
+      POLICY_SOURCE_FEED_SEEDS.some((feed) => feed.region_slug === "global"),
+    ).toBe(true);
+  });
+
   it("keeps china quota inside the weekly envelope", () => {
     expect(regionQuota("china")).toBeGreaterThanOrEqual(1);
     expect(regionQuota("china")).toBeLessThanOrEqual(6);
+    expect(regionQuota("guangdong")).toBe(1);
+    expect(regionQuota("global")).toBe(1);
     expect(regionQuota("unknown-country")).toBe(1);
   });
 });

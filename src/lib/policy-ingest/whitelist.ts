@@ -1,6 +1,7 @@
 /**
- * Starter official-source whitelist for BESS-active markets.
- * Prefer policy list / gazette pages — never open-web search.
+ * Starter source whitelist for BESS-active markets.
+ * Prefer official policy list / gazette pages; industry media list pages may
+ * be added explicitly when requested. Never open-web search.
  * Replace or extend after reviewing monthly brief samples.
  */
 export type WhitelistFeedSeed = {
@@ -178,6 +179,70 @@ export const POLICY_SOURCE_FEED_SEEDS: readonly WhitelistFeedSeed[] = [
     source_name: "ANEEL",
     language: "pt",
     priority: 55,
+  },
+
+  // Industry media / association list pages (explicit whitelist only).
+  // Priority sits below official gazettes so regulators win the weekly quota.
+  {
+    id: "10000000-0000-4000-8000-000000000080",
+    region_slug: "china",
+    name: "ESZoneo — Policy Updates",
+    list_url: "https://eszoneo.com/intel/policy-updates",
+    source_name: "ESZoneo",
+    language: "zh",
+    priority: 45,
+    notes: "行业媒体政策汇总；硬过滤应跳过解读/盘点类，仅保留正式政策转载。",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000081",
+    region_slug: "china",
+    name: "ESS News — Markets / Policy",
+    list_url: "https://www.ess-news.com/category/markets/policy/",
+    source_name: "ESS News",
+    language: "en",
+    priority: 44,
+    notes: "储能行业媒体政策栏目；项目宣传与评论稿应 skip。",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000082",
+    region_slug: "china",
+    name: "中国储能网 — 政策法规",
+    list_url: "https://www.escn.com.cn/news/564.html",
+    source_name: "中国储能网",
+    language: "zh",
+    priority: 43,
+    notes: "行业门户政策法规栏目；优先保留原文链接可核验的通知/办法。",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000083",
+    region_slug: "guangdong",
+    name: "广东省储能行业协会 — 政策列表",
+    list_url: "https://www.gdshe.org/list/7.html",
+    source_name: "广东省储能行业协会",
+    language: "zh",
+    priority: 42,
+    notes: "省级行业协会政策列表；归属广东省份目录。",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000084",
+    region_slug: "global",
+    name: "Energy-Storage.News — Policy subjects",
+    list_url:
+      "https://www.energy-storage.news/premium/content/?jsf=jet-engine&tax=subjects:435",
+    source_name: "Energy-Storage.News",
+    language: "en",
+    priority: 40,
+    notes: "全球储能媒体政策专题；premium 列表可能需可公开抓取的条目才入库。",
+  },
+  {
+    id: "10000000-0000-4000-8000-000000000085",
+    region_slug: "usa",
+    name: "Utility Dive — Storage",
+    list_url: "https://www.utilitydive.com/topic/storage/",
+    source_name: "Utility Dive",
+    language: "en",
+    priority: 40,
+    notes: "美国电力媒体储能专题；仅保留监管/规则类，跳过公司新闻与观点稿。",
   },
 ];
 
