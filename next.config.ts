@@ -6,11 +6,13 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   async headers() {
+    // Allow Cursor / local iframe previews in development. Keep DENY in production.
+    const frameOption = process.env.NODE_ENV === "production" ? "DENY" : "SAMEORIGIN";
     return [
       {
         source: "/:path*",
         headers: [
-          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Frame-Options", value: frameOption },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
         ],
