@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -17,16 +18,17 @@ const EXPECTED_TOPIC_IDS = [
   "storage-operating-costs",
   "green-power-direct-connection",
   "retail-rules",
+  "renewable-mechanism-price",
 ];
 
 describe("China provincial market atlas taxonomy", () => {
-  it("defines seven distinct topics and 217 province-topic cells", () => {
+  it("defines eight distinct topics and 248 province-topic cells", () => {
     expect(CHINA_MARKET_TOPICS.map((topic) => topic.id)).toEqual(
       EXPECTED_TOPIC_IDS,
     );
     expect(CHINA_MARKET_TOPIC_IDS).toEqual(EXPECTED_TOPIC_IDS);
-    expect(new Set(CHINA_MARKET_TOPICS.map((topic) => topic.id)).size).toBe(7);
-    expect(31 * CHINA_MARKET_TOPICS.length).toBe(217);
+    expect(new Set(CHINA_MARKET_TOPICS.map((topic) => topic.id)).size).toBe(8);
+    expect(31 * CHINA_MARKET_TOPICS.length).toBe(248);
   });
 
   it("keeps requested subfields and separates revenue from grid cost", () => {
@@ -55,12 +57,25 @@ describe("China provincial market atlas taxonomy", () => {
     expect(fieldLabels("fourth-regulatory-cycle-grid-cost")).toEqual(
       expect.arrayContaining(["输配电容量电价", "输配电需量电价", "线损率"]),
     );
+    expect(fieldLabels("renewable-mechanism-price")).toEqual(
+      expect.arrayContaining([
+        "省级承接文件",
+        "存量项目机制电价",
+        "增量项目机制电价",
+        "机制电量规模",
+        "执行期限",
+        "差价结算规则",
+      ]),
+    );
     expect(topicsById.get("storage-capacity-compensation")?.title).toContain(
       "收益",
     );
     expect(
       topicsById.get("fourth-regulatory-cycle-grid-cost")?.title,
     ).toContain("用网成本");
+    expect(topicsById.get("renewable-mechanism-price")?.title).toContain(
+      "机制电价",
+    );
   });
 
   it("uses regions as the only province registry", () => {
@@ -80,15 +95,14 @@ describe("China provincial market atlas taxonomy", () => {
   });
 
   it("keeps the database topic/field allow-list aligned with the shared taxonomy", () => {
-    const migration = readFileSync(
-      fileURLToPath(
-        new URL(
-          "../../supabase/migrations/202607240001_china_province_topic_module.sql",
-          import.meta.url,
-        ),
-      ),
-      "utf8",
+    const migrationsDir = fileURLToPath(
+      new URL("../../supabase/migrations", import.meta.url),
     );
+    const migration = readdirSync(migrationsDir)
+      .filter((name) => name.endsWith(".sql"))
+      .sort()
+      .map((name) => readFileSync(path.join(migrationsDir, name), "utf8"))
+      .join("\n");
 
     for (const topic of CHINA_MARKET_TOPICS) {
       expect(migration).toContain(`'${topic.id}'`);

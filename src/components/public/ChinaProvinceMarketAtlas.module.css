@@ -1,17 +1,17 @@
 .atlas {
   --atlas-ink: #ffffff;
-  --atlas-ink-2: #f7f9f7;
-  --atlas-ink-3: #eef2ee;
+  --atlas-ink-2: #f5f9f5;
+  --atlas-ink-3: #ebf3eb;
   --atlas-paper: #151a16;
   --atlas-muted: #657068;
   --atlas-rule: #e2e7e2;
   --atlas-rule-strong: #cbd3cc;
-  --atlas-signal: #1f6b4c;
-  --atlas-signal-soft: #edf6f0;
+  --atlas-signal: #00a040;
+  --atlas-signal-soft: rgba(0, 160, 64, 0.1);
   --atlas-coral: #9a4337;
-  --atlas-cyan: #2d6e64;
-  --atlas-amber: #986a20;
-  --atlas-blue: #526f94;
+  --atlas-cyan: #60a848;
+  --atlas-amber: #7a6a16;
+  --atlas-blue: #2f6f4a;
   --atlas-display: var(--gl-font-display, "Bodoni 72", Didot, "Songti SC", serif);
   --atlas-body: var(--gl-font-body, "Avenir Next", "PingFang SC", sans-serif);
   --atlas-mono: var(--gl-font-mono, "IBM Plex Mono", "SFMono-Regular", Menlo, monospace);
@@ -797,6 +797,74 @@
   font-family: var(--atlas-mono);
   font-size: 8px;
   letter-spacing: 0.06em;
+}
+
+.policyLinks {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid #d7dee6;
+  border-radius: 10px;
+  background: #f7f9fb;
+}
+
+.policyLinksHead {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.policyLinksHead > span {
+  color: #6b7280;
+  font-family: var(--atlas-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.policyLinksHead > strong {
+  color: #008234;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.policyLinks ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.policyLinks li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 14px;
+}
+
+.policyLinks li > span {
+  color: #556159;
+  font-family: var(--atlas-mono);
+  font-size: 11px;
+}
+
+.policyLinks a {
+  color: #00a040;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.policyLinks a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.policyLinks > p {
+  margin: 0;
+  color: #657068;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .fieldGrid {

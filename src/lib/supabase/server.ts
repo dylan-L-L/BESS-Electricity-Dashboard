@@ -18,6 +18,7 @@ export async function createServerSupabaseClient() {
   if (authorization) {
     const match = authorization.match(/^Bearer\s+(.+)$/i);
     const token = match?.[1] ?? authorization;
+    // crude check: JWTs have 3 dot-separated parts
     if (typeof token === "string" && token.split(".").length === 3) {
       globalAuthHeader = { headers: { Authorization: `Bearer ${token}` } };
     }

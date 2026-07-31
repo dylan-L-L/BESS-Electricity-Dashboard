@@ -19,6 +19,7 @@ export default async function HomePage({
       signals={data.signals}
       marketMetrics={data.marketMetrics}
       provinceTopics={data.provinceTopics}
+      cfdAuctions={data.cfdAuctions}
       activeRegion={globalRegion}
       searchQuery={q}
     />

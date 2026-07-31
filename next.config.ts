@@ -6,13 +6,23 @@ const nextConfig: NextConfig = {
     root: process.cwd(),
   },
   async headers() {
-    // Allow Cursor / local iframe previews in development. Keep DENY in production.
-    const frameOption = process.env.NODE_ENV === "production" ? "DENY" : "SAMEORIGIN";
+    // Allow Cursor/VS Code Simple Browser (iframe) in local/dev; keep DENY in prod.
+    const frameHeaders =
+      process.env.NODE_ENV === "production"
+        ? [{ key: "X-Frame-Options", value: "DENY" }]
+        : [
+            {
+              key: "Content-Security-Policy",
+              value:
+                "frame-ancestors 'self' vscode-webview: vscode-file: http://localhost:* http://127.0.0.1:*",
+            },
+          ];
+
     return [
       {
         source: "/:path*",
         headers: [
-          { key: "X-Frame-Options", value: frameOption },
+          ...frameHeaders,
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
         ],

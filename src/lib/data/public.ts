@@ -3,6 +3,7 @@ import "server-only";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
+  SupabaseCfdAuctionRepository,
   SupabaseMarketMetricRepository,
   SupabaseProvinceTopicRepository,
   SupabaseRegionRepository,
@@ -11,6 +12,7 @@ import {
 import { SignalService } from "@/lib/services/signal-service";
 import { ProvinceTopicService } from "@/lib/services/province-topic-service";
 import type {
+  ChinaCfdAuction,
   MarketMetric,
   ProvinceTopicRecordWithFields,
   Region,
@@ -23,6 +25,7 @@ export type PublicDashboardData = {
   signals: Signal[];
   marketMetrics: MarketMetric[];
   provinceTopics: ProvinceTopicRecordWithFields[];
+  cfdAuctions: ChinaCfdAuction[];
 };
 
 async function getMockDashboardData(): Promise<PublicDashboardData> {
@@ -43,13 +46,16 @@ export async function getPublicDashboardData(): Promise<PublicDashboardData> {
     const provinceTopicService = new ProvinceTopicService(
       new SupabaseProvinceTopicRepository(client),
     );
+    const cfdAuctionRepository = new SupabaseCfdAuctionRepository(client);
 
-    const [regions, signals, marketMetrics, provinceTopics] = await Promise.all([
-      regionRepository.list(),
-      signalService.listPublic(),
-      metricRepository.listPublic(),
-      provinceTopicService.listPublic(),
-    ]);
+    const [regions, signals, marketMetrics, provinceTopics, cfdAuctions] =
+      await Promise.all([
+        regionRepository.list(),
+        signalService.listPublic(),
+        metricRepository.listPublic(),
+        provinceTopicService.listPublic(),
+        cfdAuctionRepository.listPublic(),
+      ]);
 
     return {
       configured: true,
@@ -57,6 +63,7 @@ export async function getPublicDashboardData(): Promise<PublicDashboardData> {
       signals,
       marketMetrics,
       provinceTopics,
+      cfdAuctions,
     };
   } catch {
     // Local/dev fallback when Supabase is configured but unreachable.
