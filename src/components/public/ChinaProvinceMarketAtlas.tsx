@@ -658,6 +658,9 @@ export function ChinaProvinceMarketAtlas({
                     ? "查看来源（竞价库）"
                     : null;
                 const hasValue = Boolean(displayText?.trim());
+                const compactValue =
+                  hasValue &&
+                  (displayText!.length > 12 || /[·•、,]/.test(displayText!));
                 return (
                   <section
                     className={styles.fieldCard}
@@ -673,6 +676,8 @@ export function ChinaProvinceMarketAtlas({
                     <div
                       className={styles.fieldValue}
                       data-empty={!hasValue}
+                      data-kind={definition.valueKind}
+                      data-compact={compactValue || undefined}
                     >
                       <strong>{hasValue ? displayText : "—"}</strong>
                       {hasValue && displayUnit ? (

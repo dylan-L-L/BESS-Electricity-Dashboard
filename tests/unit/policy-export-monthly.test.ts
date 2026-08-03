@@ -4,6 +4,7 @@ import {
   buildPolicyExportRows,
   isHighImpactPolicy,
   policyRowsToMarkdown,
+  policyRowsToWordHtml,
 } from "@/lib/export/policy-signals";
 import type { Region, Signal } from "@/lib/types";
 
@@ -78,21 +79,26 @@ function signal(
   return {
     signal_type: "policy",
     summary: "影响摘要",
+    body: null,
     category: "容量电价",
     original_status: null,
     normalized_status: "effective",
     event_date: "2026-07-01",
     effective_date: null,
+    expires_at: null,
     impact_channel: null,
     impact_direction: null,
     impact_level: null,
     source_url: "https://example.com/p",
     source_name: "发改委",
+    issuer: "发改委",
     reviewer_note: "已核",
+    needs_human_review: false,
     review_status: "published",
     published_at: now,
     created_at: now,
     updated_at: now,
+    crawled_at: now,
     is_demo: true,
     reviewed_at: now,
     ...partial,
@@ -135,5 +141,17 @@ describe("policy monthly-report export shape", () => {
     expect(markdown).toContain("欧洲");
     expect(markdown).toContain("（***）国家级通知");
     expect(markdown).not.toContain("Key Takeaways");
+
+    const word = policyRowsToWordHtml(rows, {
+      from: "2026-06-12",
+      to: "2026-07-12",
+      regionLabel: "全球（全部）",
+    });
+    expect(word).toContain("urn:schemas-microsoft-com:office:word");
+    expect(word).toContain("储能与 ESG 政策动态");
+    expect(word).toContain("<h2>国内相关政策</h2>");
+    expect(word).toContain("<h2>国家政策</h2>");
+    expect(word).toContain("<h2>欧洲</h2>");
+    expect(word).toContain("（***）国家级通知");
   });
 });

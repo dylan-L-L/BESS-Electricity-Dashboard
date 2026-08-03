@@ -7,7 +7,7 @@ import {
   downloadTextFile,
   isHighImpactPolicy,
   policyRowsToCsv,
-  policyRowsToMarkdown,
+  policyRowsToWordHtml,
 } from "@/lib/export/policy-signals";
 import {
   isPublishedPolicySignal,
@@ -248,25 +248,31 @@ export function PolicyFeed({
     setVisibleCount(INITIAL_VISIBLE);
   }
 
-  function exportMarkdown() {
-    const rows = buildPolicyExportRows(filtered, regionsById);
-    const markdown = policyRowsToMarkdown(rows, {
+  function exportRows() {
+    return buildPolicyExportRows(filtered, regionsById);
+  }
+
+  function exportMeta() {
+    return {
       from: fromDate,
       to: toDate,
       regionLabel: regionFilterLabel,
-    });
+    };
+  }
+
+  function exportWord() {
+    const html = policyRowsToWordHtml(exportRows(), exportMeta());
     downloadTextFile(
-      `policy-brief_${fromDate || "all"}_${toDate || "all"}.md`,
-      markdown,
-      "text/markdown;charset=utf-8",
+      `policy-brief_${fromDate || "all"}_${toDate || "all"}.doc`,
+      html,
+      "application/msword;charset=utf-8",
     );
   }
 
   function exportCsv() {
-    const rows = buildPolicyExportRows(filtered, regionsById);
     downloadTextFile(
       `policy-brief_${fromDate || "all"}_${toDate || "all"}.csv`,
-      policyRowsToCsv(rows),
+      policyRowsToCsv(exportRows()),
       "text/csv;charset=utf-8",
     );
   }
@@ -387,8 +393,8 @@ export function PolicyFeed({
           />
         </label>
         <div className={styles.exportActions}>
-          <button type="button" onClick={exportMarkdown}>
-            导出 Markdown
+          <button type="button" onClick={exportWord}>
+            导出 Word
           </button>
           <button type="button" onClick={exportCsv}>
             导出 CSV
