@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     "*.cursor.sh",
     "*.cursor.com",
     "*.workos.cloud",
+    "*.trycloudflare.com",
+    "*.loca.lt",
   ],
   turbopack: {
     // Pin Turbopack to this repo so local/dev does not pick a wrong workspace root.
