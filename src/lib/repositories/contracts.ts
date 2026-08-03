@@ -1,4 +1,5 @@
 import type {
+  ChinaCfdAuction,
   MarketMetric,
   ProvinceTopicField,
   ProvinceTopicRecord,
@@ -81,6 +82,19 @@ export type UpdateProvinceTopicRecord = Partial<
   Omit<ProvinceTopicRecord, "id" | "created_at">
 >;
 export type CreateProvinceTopicField = Omit<ProvinceTopicField, "id">;
+
+export type CreateCfdAuctionRecord = Omit<ChinaCfdAuction, "id">;
+export type UpdateCfdAuctionRecord = Partial<
+  Omit<ChinaCfdAuction, "id" | "created_at">
+>;
+
+export interface CfdAuctionRepository {
+  listAdmin(): Promise<ChinaCfdAuction[]>;
+  listPublic(): Promise<ChinaCfdAuction[]>;
+  getAdminById(id: string): Promise<ChinaCfdAuction | null>;
+  create(input: CreateCfdAuctionRecord): Promise<ChinaCfdAuction>;
+  update(id: string, input: UpdateCfdAuctionRecord): Promise<ChinaCfdAuction>;
+}
 
 export interface ProvinceTopicRepository {
   listAdmin(query?: AdminProvinceTopicQuery): Promise<ProvinceTopicRecord[]>;

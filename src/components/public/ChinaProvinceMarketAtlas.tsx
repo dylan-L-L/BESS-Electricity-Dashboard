@@ -8,6 +8,7 @@ import {
   PROVINCE_TOPIC_OPERATIONAL_STATUS_LABELS,
 } from "@/lib/china-market/status";
 import type {
+  ChinaCfdAuction,
   MarketMetric,
   ProvinceTopicField,
   ProvinceTopicRecordWithFields,
@@ -15,6 +16,11 @@ import type {
   Signal,
 } from "@/lib/types";
 
+import { ChinaCfdOverviewDashboard } from "./ChinaCfdOverviewDashboard";
+import {
+  ChinaProvinceCfdDossier,
+  deriveMechanismFieldValue,
+} from "./ChinaProvinceCfdDossier";
 import {
   CHINA_MARKET_TOPICS,
   type ChinaMarketTopicId,
@@ -152,6 +158,8 @@ export interface ChinaProvinceMarketAtlasProps {
   marketMetrics?: readonly MarketMetric[];
   /** Reviewed field-level records from the dedicated province-topic module. */
   provinceTopics?: readonly ProvinceTopicRecordWithFields[];
+  /** Published CfD auction rows; overview charts only render for topic 08. */
+  cfdAuctions?: readonly ChinaCfdAuction[];
   initialProvinceId?: string;
   initialTopicId?: ChinaMarketTopicId;
   className?: string;
@@ -170,6 +178,7 @@ export function ChinaProvinceMarketAtlas({
   signals = [],
   marketMetrics = [],
   provinceTopics = [],
+  cfdAuctions = [],
   initialProvinceId,
   initialTopicId = "trading-rules",
   className,
@@ -255,6 +264,12 @@ export function ChinaProvinceMarketAtlas({
   const activeProvinceMetrics = activeProvince
     ? chinaMetrics.filter((metric) => metric.region_id === activeProvince.id)
     : [];
+  const activeProvinceCfdAuctions = useMemo(() => {
+    if (!activeProvince) return [];
+    return cfdAuctions.filter(
+      (auction) => auction.region_id === activeProvince.id,
+    );
+  }, [activeProvince, cfdAuctions]);
   const activeTopicRecords = provinces
     .map((province) =>
       recordsByCell.get(recordCellKey(province.id, activeTopic.id)),
@@ -354,7 +369,7 @@ export function ChinaProvinceMarketAtlas({
             </em>
           </h2>
           <p>
-            七类专题按数据库中的省级专题记录分别展示。每个具体值都保留覆盖状态、原始单位和字段级证据定位。
+            八类专题按数据库中的省级专题记录分别展示。每个具体值都保留覆盖状态、原始单位和字段级证据定位。
           </p>
           <div
             className={styles.boundaryFlag}
@@ -370,7 +385,10 @@ export function ChinaProvinceMarketAtlas({
         <aside className={styles.coverageCard} aria-label="已发布专题数据覆盖">
           <div className={styles.coverageTopline}>
             <span>PUBLISHED TOPIC COVERAGE</span>
-            <strong>{activeTopic.index} / 07</strong>
+            <strong>
+              {activeTopic.index} /{" "}
+              {String(CHINA_MARKET_TOPICS.length).padStart(2, "0")}
+            </strong>
           </div>
           <div className={styles.coverageValue}>
             <strong>{topicProvinceCoverage}%</strong>
@@ -405,7 +423,7 @@ export function ChinaProvinceMarketAtlas({
       <div className={styles.topicRail}>
         <div className={styles.railLabel}>
           <span>Topic ledger</span>
-          <strong>七类专题</strong>
+          <strong>八类专题</strong>
         </div>
         <div
           className={styles.topicTabs}
@@ -450,6 +468,22 @@ export function ChinaProvinceMarketAtlas({
         </div>
         <p>{activeTopic.description}</p>
       </div>
+
+      {activeTopic.id === "renewable-mechanism-price" && cfdAuctions.length ? (
+        <ChinaCfdOverviewDashboard
+          auctions={cfdAuctions}
+          onProvinceSelect={(regionId) => {
+            const province = provinces.find((item) => item.id === regionId);
+            if (!province) return;
+            selectProvince(province);
+            requestAnimationFrame(() => {
+              document
+                .getElementById("china-province-detail")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+          }}
+        />
+      ) : null}
 
       <div className={styles.workspace}>
         <section
@@ -552,7 +586,11 @@ export function ChinaProvinceMarketAtlas({
         </section>
 
         {activeProvince ? (
-          <article className={styles.detailPanel} aria-live="polite">
+          <article
+            id="china-province-detail"
+            className={styles.detailPanel}
+            aria-live="polite"
+          >
             <header className={styles.detailHeader}>
               <div className={styles.provinceMonogram} aria-hidden="true">
                 {regionMonogram(activeProvince)}
@@ -583,16 +621,43 @@ export function ChinaProvinceMarketAtlas({
               </div>
             ) : null}
 
+            {activeTopic.id === "renewable-mechanism-price" ? (
+              <ChinaProvinceCfdDossier auctions={activeProvinceCfdAuctions} />
+            ) : null}
+
             <div className={styles.fieldGrid}>
               {activeTopic.fields.map((definition) => {
                 const field = fieldForKey(activeRecord, definition.key);
-                const state = field?.coverage_status ?? "no_topic_data";
+                const derived =
+                  activeTopic.id === "renewable-mechanism-price" &&
+                  !field?.value_text?.trim()
+                    ? deriveMechanismFieldValue(
+                        definition.key,
+                        activeProvinceCfdAuctions,
+                      )
+                    : null;
+                const state = field?.coverage_status ??
+                  (derived ? "partial" : "no_topic_data");
                 const statusLabel = field
                   ? PROVINCE_TOPIC_FIELD_COVERAGE_LABELS[
                       field.coverage_status
                     ]
-                  : "暂无已发布数据";
-                const hasValue = Boolean(field?.value_text?.trim());
+                  : derived
+                    ? "竞价库自动拆解"
+                    : "暂无已发布数据";
+                const displayText = field?.value_text?.trim()
+                  ? field.value_text
+                  : derived?.text;
+                const displayUnit = field?.value_text?.trim()
+                  ? field?.unit
+                  : derived?.unit;
+                const displaySourceUrl = field?.source_url ?? derived?.sourceUrl;
+                const displaySourceName = field?.source_url
+                  ? field.source_name || "查看字段来源"
+                  : derived?.sourceUrl
+                    ? "查看来源（竞价库）"
+                    : null;
+                const hasValue = Boolean(displayText?.trim());
                 return (
                   <section
                     className={styles.fieldCard}
@@ -609,9 +674,9 @@ export function ChinaProvinceMarketAtlas({
                       className={styles.fieldValue}
                       data-empty={!hasValue}
                     >
-                      <strong>{hasValue ? field?.value_text : "—"}</strong>
-                      {hasValue && field?.unit ? (
-                        <small>{field.unit}</small>
+                      <strong>{hasValue ? displayText : "—"}</strong>
+                      {hasValue && displayUnit ? (
+                        <small>{displayUnit}</small>
                       ) : null}
                     </div>
                     {field?.applicability || field?.source_locator ? (
@@ -631,13 +696,13 @@ export function ChinaProvinceMarketAtlas({
                       </dl>
                     ) : null}
                     <div className={styles.sourceRow}>
-                      {field?.source_url ? (
+                      {displaySourceUrl ? (
                         <a
-                          href={field.source_url}
+                          href={displaySourceUrl}
                           target="_blank"
                           rel="noreferrer"
                         >
-                          {field.source_name || "查看字段来源"} ↗
+                          {displaySourceName} ↗
                         </a>
                       ) : (
                         <span>尚无字段级公开来源</span>
@@ -693,7 +758,7 @@ export function ChinaProvinceMarketAtlas({
                     </strong>
                   </div>
                   <p>
-                    这些通用记录不能自动证明当前专题字段。请由管理员在“省级七专题”模块建立字段值、覆盖状态和证据后发布。
+                    这些通用记录不能自动证明当前专题字段。请由管理员在“省级专题”模块建立字段值、覆盖状态和证据后发布。
                   </p>
                 </>
               )}

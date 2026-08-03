@@ -71,6 +71,13 @@ export interface Signal {
   reviewer_id?: string | null;
   reviewed_at: string | null;
   created_by?: string | null;
+  /** Whitelist feed that produced this AI draft (policy ingest). */
+  feed_id?: string | null;
+  ingest_run_id?: string | null;
+  content_hash?: string | null;
+  ai_importance?: number | null;
+  /** Official document / docket / file number when known. */
+  document_id?: string | null;
 }
 
 export interface MarketMetric {
@@ -175,6 +182,65 @@ export interface ProvinceTopicRecord {
 
 export interface ProvinceTopicRecordWithFields extends ProvinceTopicRecord {
   fields: ProvinceTopicField[];
+}
+
+/**
+ * One province-level grid area x auction round in the China wind/solar CfD
+ * (mechanism price, NDRC Doc 136) master table. NULL numeric values mean
+ * "not published" and are never coerced to zero.
+ */
+export interface ChinaCfdAuction {
+  id: string;
+  region_id: string;
+  province_label: string;
+  province_label_en: string | null;
+  grid_region: string | null;
+  auction_round: string | null;
+  announcement_date: string | null;
+  delivery_year: number | null;
+  commissioning_window: string | null;
+  status: string | null;
+  pot_design: string | null;
+  onshore_wind_floor: number | null;
+  onshore_wind_cap: number | null;
+  onshore_wind_strike: number | null;
+  offshore_wind_floor: number | null;
+  offshore_wind_cap: number | null;
+  offshore_wind_strike: number | null;
+  solar_floor: number | null;
+  solar_cap: number | null;
+  solar_strike: number | null;
+  coal_benchmark: number | null;
+  target_volume_gwh: number | null;
+  awarded_volume_gwh: number | null;
+  subscription_rate: number | null;
+  onshore_wind_target_gwh: number | null;
+  onshore_wind_awarded_gwh: number | null;
+  offshore_wind_target_gwh: number | null;
+  offshore_wind_awarded_gwh: number | null;
+  solar_target_gwh: number | null;
+  solar_awarded_gwh: number | null;
+  duration_years_onshore: number | null;
+  duration_years_offshore: number | null;
+  duration_years_solar: number | null;
+  note: string | null;
+  source_url: string | null;
+  source_name: string | null;
+  implementation_plan_url: string | null;
+  implementation_plan_name: string | null;
+  announcement_url: string | null;
+  announcement_name: string | null;
+  supplemental_url: string | null;
+  supplemental_name: string | null;
+  legacy_coverage_ratio: number | null;
+  legacy_strike: number | null;
+  legacy_duration_years: number | null;
+  legacy_note: string | null;
+  legacy_url: string | null;
+  is_demo: boolean;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export type ActorRole = "admin" | "reviewer" | "viewer";
