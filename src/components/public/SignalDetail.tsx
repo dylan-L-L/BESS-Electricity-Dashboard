@@ -1,11 +1,13 @@
 import type { Region, Signal } from "@/lib/types";
 import Link from "next/link";
 
+import { isHighImpactPolicy } from "@/lib/export/policy-signals";
 import {
   formatDate,
   formatOptionalText,
   normalizedStatusLabel,
 } from "./formatters";
+import { HighImpactMark, stripLegacyImpactPrefix } from "./HighImpactMark";
 import { isPublishedSignal, StatusPill } from "./Dashboard";
 
 type DemoAware = { is_demo?: boolean };
@@ -17,7 +19,15 @@ const REVIEW_STATUS_LABELS: Record<string, string> = {
   rejected: "已驳回",
 };
 
+const POLICY_TRACK_LABELS: Record<string, string> = {
+  storage_power_market: "储能与电力市场",
+  esg: "ESG",
+  both: "储能与电力市场 + ESG",
+  none: "未归轨",
+};
+
 function importanceLabel(signal: Signal): string {
+  if (isHighImpactPolicy(signal)) return "Key";
   if (signal.impact_level?.trim()) {
     const level = signal.impact_level.trim().toLowerCase();
     if (level === "high") return "高";
@@ -29,6 +39,12 @@ function importanceLabel(signal: Signal): string {
     return signal.ai_importance.toFixed(2);
   }
   return "—";
+}
+
+function policyTrackLabel(signal: Signal): string {
+  const track = signal.policy_track?.trim();
+  if (!track) return "";
+  return POLICY_TRACK_LABELS[track] ?? track;
 }
 
 export interface SignalDetailProps {
@@ -52,6 +68,7 @@ export function SignalDetail({
   const regionName =
     region?.name_zh || region?.name_en || region?.code || "未指定地区";
   const category = signal.category?.trim();
+  const trackLabel = policyTrackLabel(signal);
   const issuer = signal.issuer?.trim() || "";
   const sourceName = signal.source_name?.trim() || "";
   const sourceLabel = issuer || sourceName || "查看来源";
@@ -64,6 +81,8 @@ export function SignalDetail({
   const needsReview = Boolean(signal.needs_human_review);
   const reviewStatusLabel =
     REVIEW_STATUS_LABELS[signal.review_status] ?? signal.review_status;
+  const displayTitle = stripLegacyImpactPrefix(signal.title);
+  const highImpact = isHighImpactPolicy(signal);
 
   return (
     <main className="gl-detail-page">
@@ -101,9 +120,22 @@ export function SignalDetail({
                 <span>{category}</span>
               </>
             ) : null}
+            {trackLabel ? (
+              <>
+                <span>·</span>
+                <span>{trackLabel}</span>
+              </>
+            ) : null}
             {isDemo ? <span className="gl-demo-pill">Demo</span> : null}
           </div>
-          <h1>{signal.title}</h1>
+          <h1>
+            {highImpact ? (
+              <>
+                <HighImpactMark className="gl-high-impact-badge" withLabel />{" "}
+              </>
+            ) : null}
+            {displayTitle}
+          </h1>
           <StatusPill status={signal.normalized_status} />
         </header>
 
@@ -137,8 +169,18 @@ export function SignalDetail({
             <strong>{formatOptionalText(category)}</strong>
           </div>
           <div className="gl-drawer-stat">
+            <span>政策轨道</span>
+            <strong>{formatOptionalText(trackLabel)}</strong>
+          </div>
+          <div className="gl-drawer-stat">
             <span>重要性</span>
-            <strong>{importanceLabel(signal)}</strong>
+            <strong>
+              {highImpact ? (
+                <HighImpactMark className="gl-high-impact-badge" withLabel />
+              ) : (
+                importanceLabel(signal)
+              )}
+            </strong>
           </div>
           <div className="gl-drawer-stat">
             <span>适用地区</span>

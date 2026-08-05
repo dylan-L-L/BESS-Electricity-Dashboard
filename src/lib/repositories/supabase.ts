@@ -39,6 +39,8 @@ const PUBLIC_SIGNAL_COLUMNS = [
   "summary",
   "body",
   "category",
+  "policy_track",
+  "star_mark",
   "original_status",
   "normalized_status",
   "event_date",

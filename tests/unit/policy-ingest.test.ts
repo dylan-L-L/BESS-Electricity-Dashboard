@@ -141,27 +141,40 @@ describe("policy ingest whitelist + quotas", () => {
 });
 
 describe("AI ingest disposition", () => {
-  it("auto-publishes high-importance formal policies", () => {
+  it("auto-publishes only when star_mark and importance meet threshold", () => {
     expect(
       decideIngestDisposition({
         importance: POLICY_INGEST_AUTO_PUBLISH_MIN,
         is_formal_policy: true,
         is_commentary: false,
         policy_track: "storage_power_market",
+        star_mark: true,
       }),
     ).toBe("publish");
   });
 
-  it("auto-publishes star-marked policies even near the floor", () => {
+  it("keeps high-importance without star as draft", () => {
     expect(
       decideIngestDisposition({
-        importance: 0.5,
+        importance: 0.95,
+        is_formal_policy: true,
+        is_commentary: false,
+        policy_track: "storage_power_market",
+        star_mark: false,
+      }),
+    ).toBe("draft");
+  });
+
+  it("keeps star-marked policies below auto-publish threshold as draft", () => {
+    expect(
+      decideIngestDisposition({
+        importance: 0.6,
         is_formal_policy: true,
         is_commentary: false,
         policy_track: "esg",
         star_mark: true,
       }),
-    ).toBe("publish");
+    ).toBe("draft");
   });
 
   it("keeps mid-importance formal policies as draft", () => {
@@ -182,6 +195,7 @@ describe("AI ingest disposition", () => {
         is_formal_policy: true,
         is_commentary: true,
         policy_track: "esg",
+        star_mark: true,
       }),
     ).toBe("reject");
     expect(
@@ -190,6 +204,7 @@ describe("AI ingest disposition", () => {
         is_formal_policy: true,
         is_commentary: false,
         policy_track: "none",
+        star_mark: true,
       }),
     ).toBe("reject");
     expect(
@@ -198,6 +213,7 @@ describe("AI ingest disposition", () => {
         is_formal_policy: true,
         is_commentary: false,
         policy_track: "storage_power_market",
+        star_mark: true,
       }),
     ).toBe("reject");
   });

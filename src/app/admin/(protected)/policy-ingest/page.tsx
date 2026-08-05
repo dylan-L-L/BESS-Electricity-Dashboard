@@ -82,16 +82,17 @@ export default async function AdminPolicyIngestPage() {
         <p>
           每日凌晨（UTC 22:00 ≈ 北京时间 06:00）自动抓取白名单源；可手动补跑。
           双轨筛选（储能与电力市场 / ESG），排除招标融资展会与历史回顾。
-          AI 提炼中文摘要后：标（*）或重要性 ≥ {POLICY_INGEST_AUTO_PUBLISH_MIN}{" "}
-          的正式政策自动发布；{POLICY_INGEST_MIN_IMPORTANCE}–
-          {POLICY_INGEST_AUTO_PUBLISH_MIN} 写入草稿。运行前清理过期/重复
-          `ai_draft`（已发布不硬删）。
+          AI 提炼中文摘要后：仅当 star_mark 且重要性 ≥{" "}
+          {POLICY_INGEST_AUTO_PUBLISH_MIN}{" "}
+          的正式政策自动发布（前台 Key 标识同阈值）；
+          {POLICY_INGEST_MIN_IMPORTANCE}–{POLICY_INGEST_AUTO_PUBLISH_MIN}{" "}
+          或未标星写入草稿。运行前清理过期/重复 `ai_draft`（已发布不硬删）。
         </p>
         <ul>
           <li>回溯窗口：近 {POLICY_INGEST_LOOKBACK_DAYS} 天</li>
           <li>日入审上限：{POLICY_INGEST_DAILY_CAP} 条（全球合计）</li>
           <li>
-            自动发布阈值：importance ≥ {POLICY_INGEST_AUTO_PUBLISH_MIN}
+            自动发布：star_mark && importance ≥ {POLICY_INGEST_AUTO_PUBLISH_MIN}
           </li>
           <li>
             区域软配额：

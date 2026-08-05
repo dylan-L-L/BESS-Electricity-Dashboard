@@ -90,6 +90,10 @@ export interface Signal {
   ai_importance?: number | null;
   /** Official document / docket / file number when known. */
   document_id?: string | null;
+  /** Dual-track label from AI ingest (persisted). */
+  policy_track?: "storage_power_market" | "esg" | "both" | "none" | null;
+  /** High-impact star; drives public （***） marker with auto-publish threshold. */
+  star_mark?: boolean;
 }
 
 export interface MarketMetric {

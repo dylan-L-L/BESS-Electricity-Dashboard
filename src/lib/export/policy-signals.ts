@@ -1,3 +1,4 @@
+import { POLICY_INGEST_AUTO_PUBLISH_MIN } from "@/lib/policy-ingest/config";
 import type { Region, Signal } from "@/lib/types";
 
 export type PolicyExportSection =
@@ -91,16 +92,15 @@ function overseasBloc(
   return "other";
 }
 
+/** Public Key / high-impact marker — same threshold as AI auto-publish. */
 export function isHighImpactPolicy(signal: Signal): boolean {
+  if (signal.star_mark) return true;
   if (/\(\*\*\*\)|\*\*\*/.test(signal.title || "")) return true;
   if (signal.impact_level === "high") return true;
-  if (
+  return (
     typeof signal.ai_importance === "number" &&
-    signal.ai_importance >= 0.75
-  ) {
-    return true;
-  }
-  return false;
+    signal.ai_importance >= POLICY_INGEST_AUTO_PUBLISH_MIN
+  );
 }
 
 export function buildPolicyExportRows(

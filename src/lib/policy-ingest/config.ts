@@ -44,7 +44,8 @@ export type PolicyIngestDisposition = "publish" | "draft" | "reject";
 
 /**
  * Decide whether an AI-extracted formal policy should auto-publish, stay draft,
- * or be rejected. Dual-track + star_mark drive feed noise reduction.
+ * or be rejected. Auto-publish requires star_mark AND importance ≥ threshold
+ * (aligned with frontend （***） via POLICY_INGEST_AUTO_PUBLISH_MIN).
  */
 export function decideIngestDisposition(draft: {
   importance: number;
@@ -55,15 +56,12 @@ export function decideIngestDisposition(draft: {
 }): PolicyIngestDisposition {
   if (draft.is_commentary || !draft.is_formal_policy) return "reject";
   if (draft.policy_track === "none") return "reject";
-  if (draft.importance < POLICY_INGEST_MIN_IMPORTANCE && !draft.star_mark) {
-    return "reject";
-  }
+  if (draft.importance < POLICY_INGEST_MIN_IMPORTANCE) return "reject";
   if (
-    draft.star_mark ||
+    draft.star_mark &&
     draft.importance >= POLICY_INGEST_AUTO_PUBLISH_MIN
   ) {
     return "publish";
   }
-  if (draft.importance >= POLICY_INGEST_MIN_IMPORTANCE) return "draft";
-  return "reject";
+  return "draft";
 }

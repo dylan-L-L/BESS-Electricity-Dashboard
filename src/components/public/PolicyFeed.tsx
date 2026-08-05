@@ -9,6 +9,7 @@ import {
   policyRowsToCsv,
   policyRowsToWordHtml,
 } from "@/lib/export/policy-signals";
+import { POLICY_INGEST_AUTO_PUBLISH_MIN } from "@/lib/policy-ingest/config";
 import {
   isPublishedPolicySignal,
   listRegionPolicyArchive,
@@ -23,6 +24,7 @@ import {
   normalizedStatusLabel,
   statusClassName,
 } from "./formatters";
+import { HighImpactMark, stripLegacyImpactPrefix } from "./HighImpactMark";
 import styles from "./PolicyFeed.module.css";
 
 type SignalHref = (signal: Signal) => string;
@@ -290,8 +292,24 @@ export function PolicyFeed({
             {isArchive ? `${archiveLabel}政策信息流` : "政策动态"}
           </h2>
           {isArchive ? null : (
-            <p>
-              对齐「储能与 ESG 政策月报」信息流：正式政策优先，跳过纯鼓励与低重要性；（***）标重要影响；中国条目仅中文。可按区筛选并导出月报结构。
+            <p className={styles.legend}>
+              <span
+                className={styles.legendTip}
+                tabIndex={0}
+                aria-describedby="policy-key-rule"
+              >
+                <HighImpactMark className={styles.impactInline} withLabel />
+                <span
+                  id="policy-key-rule"
+                  className={styles.legendTipBubble}
+                  role="tooltip"
+                >
+                  系统自动判定：AI 星标且重要性 ≥{" "}
+                  {POLICY_INGEST_AUTO_PUBLISH_MIN}
+                  。通常对应直接影响储能商业模式、强制要求、市场准入或重大市场机会。
+                </span>
+              </span>
+              <span>标示重要政策，由系统自动判定。</span>
             </p>
           )}
         </div>
@@ -417,7 +435,7 @@ export function PolicyFeed({
                     <div className={styles.body}>
                       <div className={styles.pills}>
                         {isHighImpactPolicy(signal) ? (
-                          <span className={styles.impact}>***</span>
+                          <HighImpactMark className={styles.impact} withLabel />
                         ) : null}
                         <span
                           className={`gl-status-pill ${statusClassName(signal.normalized_status)}`}
@@ -429,16 +447,18 @@ export function PolicyFeed({
                           <span className={styles.demo}>Demo</span>
                         ) : null}
                       </div>
-                      <h3>
-                        {isHighImpactPolicy(signal) &&
-                        !/\(\*\*\*\)|\*\*\*/.test(signal.title)
-                          ? `（***）${signal.title}`
-                          : signal.title}
-                      </h3>
+                      <h3>{stripLegacyImpactPrefix(signal.title)}</h3>
                       <p>{signal.summary}</p>
                       <div className={styles.tags}>
                         {signal.category ? (
                           <span>#{signal.category}</span>
+                        ) : null}
+                        {signal.policy_track === "storage_power_market" ? (
+                          <span>#储能电力市场</span>
+                        ) : signal.policy_track === "esg" ? (
+                          <span>#ESG</span>
+                        ) : signal.policy_track === "both" ? (
+                          <span>#双轨</span>
                         ) : null}
                         {signal.source_name ? (
                           <span>#{signal.source_name}</span>

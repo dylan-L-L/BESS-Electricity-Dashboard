@@ -91,7 +91,7 @@ const SYSTEM_PROMPT = `你为晶科储能（Jinko ESS）情报台筛选政策。
 - 仅接受政府/监管/立法机关有法律或行政效力的文件（办法、通知、规则、关税决定、有约束力的征求意见等）。
 - 媒体解读、分析师说明、项目 PR、市场花絮：is_commentary=true，is_formal_policy=false，policy_track=none。
 
-## 重要性与星标 star_mark（对应前台高影响（***））
+## 重要性与星标 star_mark（对应前台 Key 高影响标识）
 star_mark=true 当且仅当符合以下任一：
 - 直接影响储能集成商商业模式或盈利
 - 涉及强制性要求（配储比例、本地化、标准认证等）
@@ -102,9 +102,9 @@ star_mark=true 当且仅当符合以下任一：
 star_mark=false：纯鼓励无强制、影响较小或间接、宏观目标无具体执行机制。
 
 importance（0–1）：
-- star_mark=true 时通常 >= 0.70
-- 可纳入但未达星标：约 0.55–0.69
-- 应排除：< 0.55 且 policy_track=none
+- star_mark=true 时通常 >= 0.70（系统仅在 star_mark 且 importance≥0.70 时自动发布）
+- 可纳入但未达自动发布：约 0.55–0.69，或 star_mark=false
+- 应排除：< 0.55
 
 ## 输出要求
 - title_zh：简洁中文标题；事实必须来自正文。

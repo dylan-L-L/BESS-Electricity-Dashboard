@@ -446,11 +446,8 @@ export class PolicyIngestService {
     const nowIso = this.clock().toISOString();
     const autoPublish = disposition === "publish";
     const starMarked = Boolean(draft.star_mark);
-    const titleZh = starMarked
-      ? draft.title_zh.startsWith("（***）") || draft.title_zh.startsWith("(***)")
-        ? draft.title_zh
-        : `（***）${draft.title_zh}`
-      : draft.title_zh;
+    // Keep titles clean; public UI uses the Key badge driven by star_mark.
+    const titleZh = draft.title_zh.replace(/^[（(]\*\*\*[）)]\s*/, "");
     const importance = starMarked
       ? Math.max(draft.importance, POLICY_INGEST_AUTO_PUBLISH_MIN)
       : draft.importance;
@@ -461,6 +458,8 @@ export class PolicyIngestService {
       summary: draft.summary_zh,
       body: draft.body_zh,
       category: draft.category,
+      policy_track: draft.policy_track,
+      star_mark: starMarked,
       original_status: null,
       normalized_status: draft.normalized_status,
       event_date: draft.event_date,

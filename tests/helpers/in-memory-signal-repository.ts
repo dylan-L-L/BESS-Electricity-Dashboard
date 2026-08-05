@@ -124,6 +124,8 @@ export function makeSignal(overrides: Partial<Signal> = {}): Signal {
     summary: "仅用于验证发布工作流的 Demo 内容。",
     body: "仅用于验证发布工作流的 Demo 正文要点。",
     category: "Demo",
+    policy_track: null,
+    star_mark: false,
     original_status: "Filed",
     normalized_status: "filed",
     event_date: "2026-07-22",

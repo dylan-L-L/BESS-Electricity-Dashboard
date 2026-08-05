@@ -94,6 +94,8 @@ export class SignalService {
       summary: result.data.summary ?? null,
       body: result.data.body ?? null,
       category: result.data.category ?? null,
+      policy_track: null,
+      star_mark: false,
       original_status: result.data.original_status ?? null,
       normalized_status: result.data.normalized_status ?? null,
       event_date: result.data.event_date ?? null,

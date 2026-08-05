@@ -172,6 +172,37 @@ a:focus-visible {
   background: #edf8ee;
 }
 
+.gl-high-impact-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 5px;
+  border: 1px solid rgba(0, 130, 52, 0.35);
+  border-radius: 999px;
+  color: var(--gl-signal-deep);
+  background: rgba(0, 160, 64, 0.1);
+  font-family: var(--gl-font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.gl-high-impact-badge .gl-high-impact-icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.gl-high-impact-badge .gl-high-impact-label {
+  text-transform: uppercase;
+}
+
+.gl-dossier-header h1 .gl-high-impact-badge {
+  margin-right: 0.35em;
+  transform: translateY(-0.12em);
+}
+
 .gl-app-shell {
   min-height: 100vh;
   display: grid;
@@ -305,6 +336,44 @@ a:focus-visible {
   border-radius: 50%;
   background: var(--gl-signal);
   box-shadow: 0 0 0 4px var(--gl-signal-soft);
+}
+
+.gl-primary-nav .gl-directory-label {
+  padding: 0 9px 8px;
+}
+
+.gl-directory-hint {
+  margin: 0 9px 12px;
+  color: #6b706c;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.gl-region-back {
+  display: block;
+  margin: 0 9px 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  color: var(--gl-signal-deep);
+  background: var(--gl-signal-soft);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.gl-region-back:hover {
+  background: rgba(0, 160, 64, 0.16);
+}
+
+.gl-reserved-panel {
+  border-style: dashed;
+}
+
+.gl-reserved-copy {
+  max-width: 52rem;
+  margin: 0;
+  color: #556159;
+  font-size: 14px;
+  line-height: 1.65;
 }
 
 .gl-region-group {

@@ -23,6 +23,8 @@ export function toPublicSignal(signal: Signal) {
     issuer: signal.issuer,
     document_id: signal.document_id ?? null,
     ai_importance: signal.ai_importance ?? null,
+    policy_track: signal.policy_track ?? null,
+    star_mark: Boolean(signal.star_mark),
     needs_human_review: signal.needs_human_review,
     reviewer_note: signal.reviewer_note,
     review_status: signal.review_status,

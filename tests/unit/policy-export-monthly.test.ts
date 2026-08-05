@@ -122,7 +122,30 @@ describe("policy monthly-report export shape", () => {
       regionsById,
     );
 
-    expect(isHighImpactPolicy(rows[0] as unknown as Signal)).toBe(false);
+    expect(
+      isHighImpactPolicy({
+        title: "国家级通知",
+        impact_level: "high",
+        star_mark: false,
+        ai_importance: 0.7,
+      } as Signal),
+    ).toBe(true);
+    expect(
+      isHighImpactPolicy({
+        title: "普通政策",
+        impact_level: null,
+        star_mark: false,
+        ai_importance: 0.69,
+      } as Signal),
+    ).toBe(false);
+    expect(
+      isHighImpactPolicy({
+        title: "星标政策",
+        impact_level: null,
+        star_mark: true,
+        ai_importance: 0.55,
+      } as Signal),
+    ).toBe(true);
     expect(rows[0]?.importance_mark).toBe("***");
     expect(rows[0]?.section).toBe("domestic_national");
     expect(rows[1]?.section).toBe("domestic_regional");
