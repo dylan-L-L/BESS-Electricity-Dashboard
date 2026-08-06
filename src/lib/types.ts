@@ -259,6 +259,67 @@ export interface ChinaCfdAuction {
   updated_at: string;
 }
 
+/** Storage project feed track: tender notice, award notice, or commissioning. */
+export type BessProjectEventType = "tender" | "award" | "commissioning";
+
+export interface BessAwardCandidate {
+  id: string;
+  event_id: string;
+  rank_label: string;
+  rank_order: number | null;
+  candidate_name: string;
+  candidate_group: string | null;
+  bid_amount_wan: number | null;
+  unit_price_yuan_per_wh: number | null;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * One tender / award / commissioning event for the public 项目与招标 module.
+ * NULL numerics mean unknown and must never be coerced to zero.
+ * region_id null + province_label 「未知」 means unmapped / multi-province.
+ */
+export interface BessProjectEvent {
+  id: string;
+  event_type: BessProjectEventType;
+  title: string;
+  event_date: string;
+  region_id: string | null;
+  province_label: string;
+  province_raw: string | null;
+  city_raw: string | null;
+  region_bloc: string | null;
+  power_mw: number | null;
+  energy_mwh: number | null;
+  duration_h: number | null;
+  duration_band: string | null;
+  scale_label: string | null;
+  c_rate: number | null;
+  scene: string | null;
+  plant_type: string | null;
+  technology: string | null;
+  owner_name: string | null;
+  owner_group: string | null;
+  counterparty_name: string | null;
+  scope_label: string | null;
+  status_label: string | null;
+  summary: string | null;
+  budget_wan: number | null;
+  unit_price_cap_yuan_per_wh: number | null;
+  result_date: string | null;
+  source_name: string;
+  source_batch: string;
+  source_row_hash: string;
+  raw: Record<string, unknown>;
+  is_demo: boolean;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+  candidates?: BessAwardCandidate[];
+}
+
 export type ActorRole = "admin" | "reviewer" | "viewer";
 
 export interface Actor {

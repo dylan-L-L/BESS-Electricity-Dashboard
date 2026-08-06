@@ -198,4 +198,5 @@ export const MOCK_DASHBOARD_DATA = {
   marketMetrics: MOCK_METRICS,
   provinceTopics: MOCK_PROVINCE_TOPICS,
   cfdAuctions: [],
+  projectEvents: [],
 };

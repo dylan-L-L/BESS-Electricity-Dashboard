@@ -12,6 +12,7 @@ import {
 import { SignalService } from "@/lib/services/signal-service";
 import { ProvinceTopicService } from "@/lib/services/province-topic-service";
 import type {
+  BessProjectEvent,
   ChinaCfdAuction,
   MarketMetric,
   ProvinceTopicRecordWithFields,
@@ -26,6 +27,7 @@ export type PublicDashboardData = {
   marketMetrics: MarketMetric[];
   provinceTopics: ProvinceTopicRecordWithFields[];
   cfdAuctions: ChinaCfdAuction[];
+  projectEvents: BessProjectEvent[];
 };
 
 const EMPTY_DATA: PublicDashboardData = {
@@ -35,6 +37,7 @@ const EMPTY_DATA: PublicDashboardData = {
   marketMetrics: [],
   provinceTopics: [],
   cfdAuctions: [],
+  projectEvents: [],
 };
 
 export async function getPublicDashboardData(): Promise<PublicDashboardData> {
@@ -55,6 +58,8 @@ export async function getPublicDashboardData(): Promise<PublicDashboardData> {
 
     const cfdAuctionRepository = new SupabaseCfdAuctionRepository(client);
 
+    // Project events are fetched on demand via /api/public/project-events
+    // (paginated). Do not embed the full table into every dashboard RSC payload.
     const [regions, signals, marketMetrics, provinceTopics, cfdAuctions] =
       await Promise.all([
         regionRepository.list(),
@@ -71,6 +76,7 @@ export async function getPublicDashboardData(): Promise<PublicDashboardData> {
       marketMetrics,
       provinceTopics,
       cfdAuctions,
+      projectEvents: [],
     };
   } catch {
     // Fallback: return mock data when Supabase is unreachable

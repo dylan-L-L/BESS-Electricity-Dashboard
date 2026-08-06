@@ -1,4 +1,5 @@
 import type {
+  BessProjectEvent,
   ChinaCfdAuction,
   MarketMetric,
   ProvinceTopicField,
@@ -94,6 +95,53 @@ export interface CfdAuctionRepository {
   getAdminById(id: string): Promise<ChinaCfdAuction | null>;
   create(input: CreateCfdAuctionRecord): Promise<ChinaCfdAuction>;
   update(id: string, input: UpdateCfdAuctionRecord): Promise<ChinaCfdAuction>;
+}
+
+export type CreateBessProjectEventRecord = Omit<
+  BessProjectEvent,
+  "id" | "candidates" | "created_at" | "updated_at"
+>;
+
+export interface PublicBessProjectEventQuery {
+  event_type?: BessProjectEvent["event_type"];
+  province_label?: string;
+  scene?: string;
+  plant_type?: string;
+  search?: string;
+  region_ids?: string[];
+  include_unknown?: boolean;
+  /** Inclusive YYYY-MM-DD */
+  date_from?: string;
+  /** Inclusive YYYY-MM-DD */
+  date_to?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export type PublicBessProjectEventPage = {
+  items: BessProjectEvent[];
+  total: number;
+  page: number;
+  page_size: number;
+  counts: {
+    all: number;
+    tender: number;
+    award: number;
+    commissioning: number;
+  };
+  sources: string[];
+};
+
+export type PublicBessProjectAnalytics = import("../bess-projects/analytics").BessProjectAnalytics;
+
+export interface BessProjectEventRepository {
+  listPublicPage(
+    query?: PublicBessProjectEventQuery,
+  ): Promise<PublicBessProjectEventPage>;
+  listPublicAnalytics(
+    query?: PublicBessProjectEventQuery,
+  ): Promise<PublicBessProjectAnalytics>;
+  getPublicById(id: string): Promise<BessProjectEvent | null>;
 }
 
 export interface ProvinceTopicRepository {

@@ -15,8 +15,11 @@ import {
   listRegionPolicyArchive,
   policySignalDate,
 } from "@/lib/policy/region-archive";
-import { compareContinents, compareCountries } from "@/lib/region-order";
-import { descendantRegionIds } from "@/lib/regions/descendant-ids";
+import { compareCountries } from "@/lib/region-order";
+import {
+  POLICY_REGION_BLOCS,
+  resolvePolicyBlocScopeIds,
+} from "@/lib/regions/policy-blocs";
 import type { Region, Signal } from "@/lib/types";
 
 import {
@@ -50,20 +53,6 @@ const BESS_FOCUS_COUNTRY_SLUGS = new Set([
   "netherlands",
 ]);
 
-const MACRO_TABS = [
-  { key: "", label: "全球" },
-  { key: "macro:china", label: "中国" },
-  { key: "macro:apac", label: "亚太" },
-  { key: "macro:west", label: "欧美" },
-  { key: "macro:latam", label: "拉美" },
-] as const;
-
-const MACRO_CONTINENT_SLUGS: Record<string, string[]> = {
-  "macro:apac": ["asia", "oceania"],
-  "macro:west": ["europe", "north-america"],
-  "macro:latam": ["south-america"],
-};
-
 const INITIAL_VISIBLE = 8;
 
 function regionLabel(region: Region | undefined): string {
@@ -89,39 +78,6 @@ function daysAgoIso(days: number): string {
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function resolveScopeIds(
-  regions: readonly Region[],
-  filter: string,
-): Set<string> | null {
-  if (!filter) return null;
-
-  if (filter === "macro:china") {
-    const china = regions.find(
-      (region) =>
-        region.region_type === "country" && region.slug === "china",
-    );
-    return china ? descendantRegionIds(regions, china.id) : new Set();
-  }
-
-  const continentSlugs = MACRO_CONTINENT_SLUGS[filter];
-  if (continentSlugs) {
-    const ids = new Set<string>();
-    for (const slug of continentSlugs) {
-      const continent = regions.find(
-        (region) =>
-          region.region_type === "continent" && region.slug === slug,
-      );
-      if (!continent) continue;
-      for (const id of descendantRegionIds(regions, continent.id)) {
-        ids.add(id);
-      }
-    }
-    return ids;
-  }
-
-  return descendantRegionIds(regions, filter);
 }
 
 export function PolicyFeed({
@@ -156,13 +112,7 @@ export function PolicyFeed({
     [regions],
   );
 
-  const continentOptions = useMemo(
-    () =>
-      regions
-        .filter((region) => region.region_type === "continent")
-        .sort(compareContinents),
-    [regions],
-  );
+  const regionTabs = POLICY_REGION_BLOCS;
 
   const countryOptions = useMemo(() => {
     const focus = regions
@@ -185,7 +135,7 @@ export function PolicyFeed({
       : signals
           .filter(isPublishedPolicySignal)
           .filter((signal) => {
-            const scopeIds = resolveScopeIds(regions, regionFilter);
+            const scopeIds = resolvePolicyBlocScopeIds(regions, regionFilter);
             return !scopeIds || scopeIds.has(signal.region_id);
           })
           .sort((left, right) =>
@@ -235,8 +185,10 @@ export function PolicyFeed({
   const regionFilterLabel = isArchive
     ? archiveLabel
     : (() => {
-        const macro = MACRO_TABS.find((tab) => tab.key === regionFilter);
-        if (macro && macro.key) return macro.label;
+        const tab = POLICY_REGION_BLOCS.find(
+          (item) => item.key === regionFilter,
+        );
+        if (tab && tab.key) return tab.label;
         if (!regionFilter) return "全球（全部）";
         return regionLabel(regionsById.get(regionFilter));
       })();
@@ -321,7 +273,7 @@ export function PolicyFeed({
 
       {isArchive ? null : (
         <div className={styles.tabs} role="tablist" aria-label="政策区域">
-          {MACRO_TABS.map((tab) => (
+          {regionTabs.map((tab) => (
             <button
               key={tab.key || "all"}
               type="button"
@@ -345,25 +297,16 @@ export function PolicyFeed({
       >
         {isArchive ? null : (
           <label>
-            <span>区域细筛</span>
+            <span>国家细筛</span>
             <select
               value={
-                regionFilter.startsWith("macro:") || regionFilter === ""
+                regionFilter.startsWith("bloc:") || regionFilter === ""
                   ? ""
                   : regionFilter
               }
               onChange={(event) => setMacroOrRegion(event.target.value)}
             >
-              <option value="">（使用上方分区 Tab）</option>
-              {continentOptions.length ? (
-                <optgroup label="大洲">
-                  {continentOptions.map((region) => (
-                    <option key={region.id} value={region.id}>
-                      {regionLabel(region)}
-                    </option>
-                  ))}
-                </optgroup>
-              ) : null}
+              <option value="">（使用上方片区 Tab）</option>
               {countryOptions.length ? (
                 <optgroup label="BESS 重点国家">
                   {countryOptions.map((region) => (

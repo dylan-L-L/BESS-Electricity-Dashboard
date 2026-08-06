@@ -267,6 +267,12 @@ export const CHINA_MARKET_TOPICS = [
     title: "风光机制电价（136号文）",
     description:
       "承接发改价格〔2025〕136号文的省级机制电价方案。存量与增量项目、机制电量规模、执行期限与差价结算规则分别记录，不混用口径。",
+    sourceDocument: {
+      label: "发改价格〔2025〕136号文",
+      href: "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202502/t20250209_1396066.html",
+      title:
+        "国家发展改革委 国家能源局《关于深化新能源上网电价市场化改革 促进新能源高质量发展的通知》",
+    },
     fields: [
       {
         key: "provincial_implementation_rule",
@@ -312,6 +318,11 @@ export const CHINA_MARKET_TOPICS = [
   shortLabel: string;
   title: string;
   description: string;
+  sourceDocument?: {
+    label: string;
+    href: string;
+    title?: string;
+  };
   fields: readonly ChinaMarketFieldDefinition[];
 }[];
 

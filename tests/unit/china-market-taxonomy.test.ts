@@ -62,6 +62,15 @@ describe("China provincial market atlas taxonomy", () => {
     expect(
       topicsById.get("fourth-regulatory-cycle-grid-cost")?.title,
     ).toContain("用网成本");
+
+    const mechanism = topicsById.get("renewable-mechanism-price");
+    expect(mechanism && "sourceDocument" in mechanism && mechanism.sourceDocument?.label).toBe(
+      "发改价格〔2025〕136号文",
+    );
+    expect(mechanism && "sourceDocument" in mechanism && mechanism.sourceDocument?.href).toBe(
+      "https://www.ndrc.gov.cn/xxgk/zcfb/tz/202502/t20250209_1396066.html",
+    );
+    expect(mechanism?.description).toContain("发改价格〔2025〕136号文");
   });
 
   it("uses regions as the only province registry", () => {

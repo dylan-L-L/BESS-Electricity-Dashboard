@@ -2,17 +2,14 @@ import { renderPublicDashboardPage } from "@/lib/data/public-dashboard-page";
 
 export const dynamic = "force-dynamic";
 
-export default async function RegionPage({
-  params,
+export default async function GlobalPolicyPage({
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
   searchParams: Promise<{ q?: string }>;
 }) {
-  const [{ slug }, { q = "" }] = await Promise.all([params, searchParams]);
+  const { q = "" } = await searchParams;
   return renderPublicDashboardPage({
     module: "policy",
-    regionSlug: slug,
     searchQuery: q,
   });
 }

@@ -2,7 +2,7 @@ import { renderPublicDashboardPage } from "@/lib/data/public-dashboard-page";
 
 export const dynamic = "force-dynamic";
 
-export default async function RegionPage({
+export default async function RegionProjectsPage({
   params,
   searchParams,
 }: {
@@ -11,7 +11,7 @@ export default async function RegionPage({
 }) {
   const [{ slug }, { q = "" }] = await Promise.all([params, searchParams]);
   return renderPublicDashboardPage({
-    module: "policy",
+    module: "projects",
     regionSlug: slug,
     searchQuery: q,
   });

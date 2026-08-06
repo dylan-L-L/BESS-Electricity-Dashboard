@@ -35,6 +35,31 @@ function classNames(
   return values.filter(Boolean).join(" ");
 }
 
+function renderTopicDescription(
+  description: string,
+  sourceDocument: { label: string; href: string; title?: string },
+) {
+  const marker = sourceDocument.label;
+  const index = description.indexOf(marker);
+  if (index < 0) return description;
+
+  return (
+    <>
+      {description.slice(0, index)}
+      <a
+        className={styles.sourceLink}
+        href={sourceDocument.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={sourceDocument.title}
+      >
+        {marker}
+      </a>
+      {description.slice(index + marker.length)}
+    </>
+  );
+}
+
 function regionLabel(region: Region): string {
   return region.name_zh || region.name_en || region.code || region.slug;
 }
@@ -354,70 +379,36 @@ export function ChinaProvinceMarketAtlas({
       className={classNames(styles.atlas, className)}
       aria-labelledby="china-market-atlas-title"
     >
-      <header className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <div className={styles.eyebrow}>
-            China provincial intelligence / 中国省级台账
+      <header className={styles.metaBar}>
+        <h2 id="china-market-atlas-title" className={styles.metaTitle}>
+          省级专题矩阵
+        </h2>
+        <dl
+          className={styles.metaStats}
+          aria-label="当前专题数据覆盖"
+          title="覆盖率按当前专题有无已发布记录计算；未公布 / 不适用 / 来源冲突仍作为覆盖状态，不转成 0。"
+        >
+          <div>
+            <dt>覆盖率</dt>
+            <dd>{topicProvinceCoverage}%</dd>
           </div>
-          <h2 id="china-market-atlas-title">
-            {provinces.length || "—"} 省级地区
-            <br />
-            <em>
-              电力市场
-              <br />
-              专题矩阵
-            </em>
-          </h2>
-          <p>
-            八类专题按数据库中的省级专题记录分别展示。每个具体值都保留覆盖状态、原始单位和字段级证据定位。
-          </p>
-          <div
-            className={styles.boundaryFlag}
-            data-complete={hasExpectedProvinceRegistry}
-          >
-            <span aria-hidden="true" />
-            {hasExpectedProvinceRegistry
-              ? "REGIONS TABLE · 31 / 31"
-              : `REGION CONFIG INCOMPLETE · ${provinces.length} / 31`}
+          <div>
+            <dt>有记录省份</dt>
+            <dd>
+              {activeTopicRecords.length}/{provinces.length || "—"}
+            </dd>
           </div>
-        </div>
-
-        <aside className={styles.coverageCard} aria-label="已发布专题数据覆盖">
-          <div className={styles.coverageTopline}>
-            <span>PUBLISHED TOPIC COVERAGE</span>
-            <strong>
-              {activeTopic.index} /{" "}
-              {String(CHINA_MARKET_TOPICS.length).padStart(2, "0")}
-            </strong>
+          <div>
+            <dt>有值字段</dt>
+            <dd>{activeTopicAvailableFields}</dd>
           </div>
-          <div className={styles.coverageValue}>
-            <strong>{topicProvinceCoverage}%</strong>
-            <span>
-              {activeTopicRecords.length} / {provinces.length} 省份有发布记录
-            </span>
+          <div>
+            <dt>地区表</dt>
+            <dd data-complete={hasExpectedProvinceRegistry}>
+              {provinces.length}/31
+            </dd>
           </div>
-          <div className={styles.coverageTrack} aria-hidden="true">
-            <span style={{ width: `${topicProvinceCoverage}%` }} />
-          </div>
-          <dl className={styles.coverageMeta}>
-            <div>
-              <dt>Topic records</dt>
-              <dd>{activeTopicRecords.length} 个发布单元</dd>
-            </div>
-            <div>
-              <dt>Available fields</dt>
-              <dd>{activeTopicAvailableFields} 个有值字段</dd>
-            </div>
-            <div>
-              <dt>Province rows</dt>
-              <dd>{provinces.length} 条地区记录</dd>
-            </div>
-          </dl>
-          <p className={styles.coverageRule}>
-            覆盖率按当前专题有无已发布记录计算；“未公布”“不适用”“来源冲突”仍作为明确覆盖状态展示，不会转成
-            0。
-          </p>
-        </aside>
+        </dl>
       </header>
 
       <div className={styles.topicRail}>
@@ -466,7 +457,14 @@ export function ChinaProvinceMarketAtlas({
           <span>{activeTopic.index} / TOPIC</span>
           <h3>{activeTopic.title}</h3>
         </div>
-        <p>{activeTopic.description}</p>
+        <p>
+          {"sourceDocument" in activeTopic && activeTopic.sourceDocument
+            ? renderTopicDescription(
+                activeTopic.description,
+                activeTopic.sourceDocument,
+              )
+            : activeTopic.description}
+        </p>
       </div>
 
       {activeTopic.id === "renewable-mechanism-price" && cfdAuctions.length ? (

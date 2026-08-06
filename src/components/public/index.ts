@@ -32,6 +32,8 @@ export type {
   GlobalMarketDirectoryProps,
 } from "./GlobalMarketDirectory";
 export { PolicyFeed } from "./PolicyFeed";
+export { ProjectsTendersPanel } from "./ProjectsTendersPanel";
+export type { ProjectsTendersPanelProps } from "./ProjectsTendersPanel";
 export {
   formatDate,
   formatNullableNumber,
