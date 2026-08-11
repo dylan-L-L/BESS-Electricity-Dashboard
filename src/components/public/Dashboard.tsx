@@ -23,6 +23,7 @@ import {
 import { ChinaCfdAuctionTable } from "./ChinaCfdAuctionTable";
 import { ChinaProvinceMarketAtlas } from "./ChinaProvinceMarketAtlas";
 import { PolicyFeed } from "./PolicyFeed";
+import { PolicyInterpretationsPanel } from "./PolicyInterpretationsPanel";
 import { ProjectsTendersPanel } from "./ProjectsTendersPanel";
 import {
   RegionSelector,
@@ -655,6 +656,7 @@ export function Dashboard({
                   variant="region-archive"
                   archiveRegion={activeRegion}
                 />
+                <PolicyInterpretationsPanel regions={regions} />
               </section>
             ) : (
               <section
@@ -669,6 +671,7 @@ export function Dashboard({
                   variant="global"
                   initialRegionId=""
                 />
+                <PolicyInterpretationsPanel regions={regions} />
               </section>
             )
           ) : null}

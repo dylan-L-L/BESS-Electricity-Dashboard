@@ -327,3 +327,8 @@ export interface Actor {
   role: ActorRole;
   email?: string;
 }
+
+export type {
+  PolicyInterpretation,
+  PolicyInterpretationPublic,
+} from "@/lib/policy-interpretations/types";

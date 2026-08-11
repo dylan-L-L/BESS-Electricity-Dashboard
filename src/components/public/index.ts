@@ -32,6 +32,7 @@ export type {
   GlobalMarketDirectoryProps,
 } from "./GlobalMarketDirectory";
 export { PolicyFeed } from "./PolicyFeed";
+export { PolicyInterpretationsPanel } from "./PolicyInterpretationsPanel";
 export { ProjectsTendersPanel } from "./ProjectsTendersPanel";
 export type { ProjectsTendersPanelProps } from "./ProjectsTendersPanel";
 export { SpGlobalStorageOutlook } from "./SpGlobalStorageOutlook";

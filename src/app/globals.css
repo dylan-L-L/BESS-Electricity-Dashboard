@@ -3601,6 +3601,96 @@ button.gl-region-button.is-desk.is-expanded {
   text-align: center;
 }
 
+.admin-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-form .chip {
+  appearance: none;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--gl-rule);
+  border-radius: 999px;
+  background: #fff;
+  color: #373b38;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-form .chip.is-active {
+  border-color: #0b5c2c;
+  background: #e8f2ea;
+  color: #0b5c2c;
+  font-weight: 650;
+}
+
+.admin-form fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.admin-form fieldset legend {
+  margin-bottom: 8px;
+  color: #555a56;
+  font-family: var(--gl-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-checkbox {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  grid-template-columns: none !important;
+}
+
+.admin-checkbox input {
+  width: auto;
+  margin-top: 3px;
+}
+
+.admin-checkbox span {
+  color: #373b38;
+  font-family: var(--gl-font-body);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.admin-help,
+.admin-muted {
+  margin: 0;
+  color: #667068;
+  font-size: 12px;
+}
+
+.admin-error {
+  margin: 0;
+  color: #9b2c2c;
+  font-size: 13px;
+}
+
+.admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .admin-form-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
